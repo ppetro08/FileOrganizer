@@ -31,17 +31,7 @@ namespace FileOrganizer
       // Runs when window opens
       private void Window_Loaded(object sender, RoutedEventArgs e)
       {
-         TheList = new List<TreeViewModel>();
-
-         TheList.Add(new TreeViewModel(Name = "Parent"));
-
-         for (int i = 1; i < 4; i++)
-         {
-            TheList[0].Children.Add(new TreeViewModel("Name" + i, "Path" + i));
-         }
-         TheList[0].Children.Add(new TreeViewModel("Name" + 4, "Path" + 4));
-
-         this.DataContext = this;
+         Videos.ItemsSource = TreeViewModel.setTree();
       }
    }
 }

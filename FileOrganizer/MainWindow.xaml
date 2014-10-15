@@ -16,7 +16,7 @@
       </ResourceDictionary>
    </Window.Resources>
    <Grid>
-      <TreeView HorizontalAlignment="Left" Height="299" Margin="10,10,0,0" VerticalAlignment="Top" Width="497" 
+      <TreeView x:Name="Videos" HorizontalAlignment="Left" Height="299" Margin="10,10,0,0" VerticalAlignment="Top" Width="497" 
                 ItemsSource="{Binding TheList}" ItemContainerStyle="{StaticResource TreeViewItemStyle}">
          <TreeView.ItemTemplate>
             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
