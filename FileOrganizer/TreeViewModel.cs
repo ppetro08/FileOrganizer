@@ -8,12 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using CustomExtensions;
 using System.Text.RegularExpressions;
+using CustomExtensions;
 
 namespace FileOrganizer
 {
    public class TreeViewModel : INotifyPropertyChanged
    {
-      public string Name { get; private set; }
+      public string Name { get; set; }
       public string FullPath { get; private set; }
       public List<TreeViewModel> Children { get; private set; }
       public static TreeViewModel movieTree;
@@ -22,7 +23,6 @@ namespace FileOrganizer
       public static List<string> tvshows = new List<string>();
 
       bool? isChecked = false;
-      bool exists = false;
       TreeViewModel _parent;
 
       #region Constructors
@@ -101,14 +101,14 @@ namespace FileOrganizer
          vidStart = nameSplit[0];
          vidEnd = nameSplit.Length > 1 ? nameSplit[nameSplit.Length - 1] : "";
 
-         if (tvshows != null && _parent.Name.ToLower().Contains("season"))
+         if (tvshows != null && _parent.Name.Contains("season", StringComparison.InvariantCultureIgnoreCase))
          {
             for (int i = 0; i < nameSplit.Length; i++)
             {
                Match match = Regex.Match(nameSplit[i], @"s([0-9].*$)", RegexOptions.IgnoreCase);
                if (match.Success)
                {
-                  if (tvshows.Any(s => s.ToLower().Contains(vidStart.ToLower()) && s.ToLower().Contains(nameSplit[i].ToLower())))
+                  if (tvshows.Any(s => s.Contains(vidStart, StringComparison.InvariantCultureIgnoreCase) && s.Contains(nameSplit[i], StringComparison.InvariantCultureIgnoreCase)))
                   {
                      return true;
                   }
@@ -119,12 +119,12 @@ namespace FileOrganizer
                }
             }
          }
-         else if (movies != null && _parent.Name.ToLower().Contains("movies"))
+         else if (movies != null && _parent.Name.Contains("movies", StringComparison.InvariantCultureIgnoreCase))
          {
             // check if vidName is not longer than 1 word
             if (nameSplit.Length == 1)
             {
-               if (movies.Any(m => m.ToLower().Equals(vidStart)))
+               if (movies.Any(m => m.Equals(vidStart, StringComparison.InvariantCultureIgnoreCase)))
                   return true;
                else
                   return false;
@@ -132,8 +132,8 @@ namespace FileOrganizer
             else 
             {
                // check if movs video is longer than 1 that is matched
-               if (movies.Any(s => s.Split(new char[] { ' ', '.' })[0].ToLower().Equals(vidStart)
-                        && s.Split(new char[] { ' ', '.' })[s.Split(new char[] { ' ', '.' }).Length - 1].ToLower().Equals(vidEnd)
+               if (movies.Any(s => s.Split(new char[] { ' ', '.' })[0].Equals(vidStart, StringComparison.InvariantCultureIgnoreCase)
+                        && s.Split(new char[] { ' ', '.' })[s.Split(new char[] { ' ', '.' }).Length - 1].Equals(vidEnd, StringComparison.InvariantCultureIgnoreCase)
                         && s.Split(new char[] { ' ', '.' }).Length == nameSplit.Length))
                {
                   return true;
@@ -158,11 +158,11 @@ namespace FileOrganizer
          {
             if (StringManipulations.isVideo(f))
             {
-               if (dir.ToLower().Contains(XML.destTV.ToLower()))
+               if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
                {
                   tvshows.Add(Path.GetFileNameWithoutExtension(f));
                }
-               else if (dir.ToLower().Contains(XML.destMovies.ToLower()))
+               else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
                {
                   movies.Add(Path.GetFileNameWithoutExtension(f));
                }
@@ -176,11 +176,11 @@ namespace FileOrganizer
                {
                   if (StringManipulations.isVideo(f))
                   {
-                     if (dir.ToLower().Contains(XML.destTV.ToLower()))
+                     if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
                      {
                         tvshows.Add(Path.GetFileNameWithoutExtension(f));
                      }
-                     else if (dir.ToLower().Contains(XML.destMovies))
+                     else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
                      {
                         movies.Add(Path.GetFileNameWithoutExtension(f));
                      }
@@ -198,11 +198,11 @@ namespace FileOrganizer
          {
             if (StringManipulations.isVideo(f))
             {
-               if (dir.ToLower().Contains(XML.destTV.ToLower()))
+               if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
                {
                   tvshows.Add(Path.GetFileNameWithoutExtension(f));
                }
-               else if (dir.ToLower().Contains(XML.destMovies.ToLower()))
+               else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
                {
                   movies.Add(Path.GetFileNameWithoutExtension(f));
                }
@@ -216,11 +216,11 @@ namespace FileOrganizer
                {
                   if (StringManipulations.isVideo(f))
                   {
-                     if (dir.ToLower().Contains(XML.destTV.ToLower()))
+                     if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
                      {
                         tvshows.Add(Path.GetFileNameWithoutExtension(f));
                      }
-                     else if (dir.ToLower().Contains(XML.destMovies))
+                     else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
                      {
                         movies.Add(Path.GetFileNameWithoutExtension(f));
                      }
@@ -246,31 +246,32 @@ namespace FileOrganizer
                   if (StringManipulations.isMovie(f))
                   {
                      Movie m = new Movie(f);
-                     // TODO: add tooltip of file location for dupes
-                     // Checks for existing movie
-                     //if (!movieExists(m.fil))
+                     //System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
+                     //if (txtLocation.Text.Trim() == "")
                      //{
-                     movieTree.Children.Add(new TreeViewModel(m.file, f));
+                     //   tool.Content = "A location is required";
                      //}
+                     //else
+                     //{
+                     //   tool.Content = "Please enter a valid location";
+                     //}
+                     //txtLocation.ToolTip = tool;
+                     // TODO: add tooltip of file location for dupes
+                     movieTree.Children.Add(new TreeViewModel(m.file, f));
                   }
                   else
                   {
                      Show s = new Show(f);
                      // TODO: add tooltip of file location for dupes
-                     // Checks for existing episode
-                     //if (!episodeExists(s.file))
-                     //{
-                     // TODO: fix this season check
                      TreeViewModel season = new TreeViewModel(s.folder + " Season " + s.season);
                      checkTree(season).Children.Add(new TreeViewModel(s.file, f));
-                     //}
                   }
 
                   // TODO: Add directories to a txt file so they save then when cleaning check the location for each folder and if they exist delete them
                   // then delete the file one the clean button is used
-                  //if (!directories.Contains(d.ToLower()))
+                  //if (!directories.Contains(d, StringComparison.InvariantCultureIgnoreCase))
                   //{
-                  //   directories.Add(d.ToLower());
+                  //   directories.Add(d, StringComparison.InvariantCultureIgnoreCase);
                   //}
                }
             }

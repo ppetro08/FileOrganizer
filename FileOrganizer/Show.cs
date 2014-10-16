@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -41,9 +42,8 @@ namespace FileOrganizer
 
          int mark = splittv.Length;
 
-         // TODO: Test video with part
          // Finds which part it is
-         if (file.ToLower().Contains("part"))
+         if (file.Contains("part", StringComparison.InvariantCultureIgnoreCase))
          {
             part = getPart(splittv, file);
          }
@@ -100,8 +100,8 @@ namespace FileOrganizer
             if (i < mark - 1)
                folder = folder + " " + UppercaseFirst(splittv[i]);
          }
-         // TODO: Check logic behind this
-         if (!file.ToLower().Contains("part"))
+
+         if (!file.Contains("part", StringComparison.InvariantCultureIgnoreCase))
             file = file + part;
       }
 

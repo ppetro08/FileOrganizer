@@ -26,10 +26,15 @@ namespace FileOrganizer
    /// </summary>
    public partial class MainWindow : Window
    {
+      FileSystemWatcher wLoc;
+      FileSystemWatcher wTV;
+      FileSystemWatcher wMov;
       private long originalSize;
       private double toMove = 0;
       private double moved = 0;
       private List<Locs> locs;
+      private List<string> directories;
+      BackgroundWorker backgroundWorker1 = new BackgroundWorker();
 
       struct Locs
       {
@@ -41,7 +46,12 @@ namespace FileOrganizer
       public MainWindow()
       {
          InitializeComponent();
-      }    
+
+         backgroundWorker1.WorkerReportsProgress = true;
+         backgroundWorker1.DoWork += new DoWorkEventHandler(backgroundWorker1_DoWork);
+         backgroundWorker1.ProgressChanged += new ProgressChangedEventHandler(backgroundWorker1_ProgressChanged);
+         backgroundWorker1.RunWorkerCompleted += new RunWorkerCompletedEventHandler(backgroundWorker1_RunWorkerCompleted);
+      }
 
       // Runs when window opens
       private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -52,6 +62,47 @@ namespace FileOrganizer
             Videos.ItemsSource = TreeViewModel.setTree();
          else
             createLocationWindow();
+
+         initWatchers();
+      }
+
+      // Initializes and turns on filewatcher for each directory
+      private void initWatchers()
+      {
+         // Initializes file watchers
+         wLoc = new FileSystemWatcher();
+         wTV = new FileSystemWatcher();
+         wMov = new FileSystemWatcher();
+
+         // Sets path for each file watcher
+         wLoc.Path = XML.location;
+         wTV.Path = XML.destTV;
+         wMov.Path = XML.destMovies;
+
+         // Sets each to watch subdirectories
+         wLoc.IncludeSubdirectories = true;
+         wTV.IncludeSubdirectories = true;
+         wMov.IncludeSubdirectories = true;
+
+         // TODO: Try to update with out having to use the onchange method
+
+         // Adds event handlers for each directory storing videos
+         wLoc.Changed += new FileSystemEventHandler(OnChanged);
+         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
+         wLoc.Renamed += new RenamedEventHandler(OnChanged);
+
+         wTV.Changed += new FileSystemEventHandler(OnChanged);
+         wTV.Deleted += new FileSystemEventHandler(OnChanged);
+         wTV.Renamed += new RenamedEventHandler(OnChanged);
+
+         wMov.Changed += new FileSystemEventHandler(OnChanged);
+         wMov.Deleted += new FileSystemEventHandler(OnChanged);
+         wMov.Renamed += new RenamedEventHandler(OnChanged);
+
+         // Begins watching
+         wLoc.EnableRaisingEvents = true;
+         wTV.EnableRaisingEvents = true;
+         wMov.EnableRaisingEvents = true;
       }
 
       #region Location Window
@@ -79,6 +130,7 @@ namespace FileOrganizer
          Locations l = new Locations();
          l.Owner = this;
          l.ShowDialog();
+         Videos.ItemsSource = TreeViewModel.setTree();
       }
       #endregion
 
@@ -105,7 +157,7 @@ namespace FileOrganizer
       }
       private void rename_Click(object sender, EventArgs e)
       {
-         // TODO: Fix this function
+         // TODO: Change input box
          TreeViewModel t = (TreeViewModel)Videos.SelectedItem;
 
          var array = t.FullPath.Split('\\');
@@ -138,7 +190,7 @@ namespace FileOrganizer
          //try
          //{
          //   DirSearch(XML.location);
-         //   foreach (string dir in _directories)
+         //   foreach (string dir in directories)
          //   {
          //      Debug.WriteLine("Directories to Delete: " + dir);
          //      FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
@@ -154,7 +206,7 @@ namespace FileOrganizer
       // Gets each video in the child folders
       private void DirSearch(string sDir)
       {
-         // TODO: Fix this function
+         // TODO: Fix cleanup dirsearch function
          // Goes through each folder
          foreach (string d in Directory.GetDirectories(sDir))
          {
@@ -162,9 +214,9 @@ namespace FileOrganizer
             if (GetDirectorySize(new DirectoryInfo(d)) < (1024 * 1024))
             {
                //Ensures one level up directory is not already listed to be deleted
-               if (!_directories.Contains(Path.GetDirectoryName(d)))
+               if (!directories.Contains(Path.GetDirectoryName(d)))
                {
-                  _directories.Add(d);
+                  directories.Add(d);
                }
             }
             DirSearch(d);
@@ -177,7 +229,7 @@ namespace FileOrganizer
       {
          originalSize = (GetDirectorySize(new DirectoryInfo(XML.destTV)) + GetDirectorySize(new DirectoryInfo(XML.destMovies)));
          locs = new List<Locs>();
-         foreach (TreeViewModel tr in Videos.Files.Items)
+         foreach (TreeViewModel tr in Videos.Items)
          {
             getFilesSize(tr);
          }
@@ -188,7 +240,7 @@ namespace FileOrganizer
       {
          originalSize = (GetDirectorySize(new DirectoryInfo(XML.destTV)) + GetDirectorySize(new DirectoryInfo(XML.destMovies)));
          locs = new List<Locs>();
-         foreach (TreeViewModel tr in Videos.files.Items)
+         foreach (TreeViewModel tr in Videos.Items)
          {
             getFilesSize(tr);
          }
@@ -268,9 +320,9 @@ namespace FileOrganizer
                dir = dir + "\\" + splitdir[i];
             }
          }
-         if (_directories.FindIndex(x => x == dir) < 0)
+         if (directories.FindIndex(x => x == dir) < 0)
          {
-            _directories.Add(dir);
+            directories.Add(dir);
          }
       }
       // Gets each video in the child folders
@@ -347,6 +399,104 @@ namespace FileOrganizer
       #endregion
       #endregion
 
+      #region Background Worker
+      private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+      {
+         try
+         {
+            foreach (Locs l in locs)
+            {
+               if ((bool)e.Argument == true)
+               {
+                  this.Dispatcher.Invoke(() => {
+                     txtProgress.Text = l.name;
+                  });
+                  try
+                  {
+                     CopyFile(l.cur, l.dest);
+                     directories.Add(Path.GetDirectoryName(l.cur));
+                  }
+                  catch (Exception ex)
+                  {
+                     Debug.WriteLine(ex);
+                     LogFile lo = new LogFile(ex.ToString());
+                  }
+               }
+               else
+               {
+                  this.Dispatcher.Invoke(() => {
+                     txtProgress.Text = l.name;
+                  });
+                  CopyFile(l.cur, l.dest);
+                  FileSystem.DeleteFile(l.cur, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+               }
+            }
+         }
+         catch (InvalidOperationException ex)
+         {
+            Debug.WriteLine(ex);
+            // Message to tell them the video is open in another program and to close it
+            LogFile lo = new LogFile(ex.ToString());
+         }
+         catch (Exception ex)
+         {
+            Debug.WriteLine(ex);
+            LogFile lo = new LogFile(ex.ToString());
+         }
+      }
+
+      private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+      {
+         progressBar1.Value = 0;  //report the progress
+         txtProgress.Text = "";
+         checkAll(false);
+      }
+
+      // Copies the files 1 MB at a time
+      private void CopyFile(string source, string destination)
+      {
+         int bytesRead = 0;
+         int bytesPerChunk = 1024 * 1024;
+
+         using (FileStream fs = new FileStream(source, FileMode.Open, FileAccess.Read))
+         {
+            using (BinaryReader br = new BinaryReader(fs))
+            {
+               using (FileStream fsDest = new FileStream(destination, FileMode.Create))
+               {
+                  BinaryWriter bw = new BinaryWriter(fsDest);
+                  byte[] buffer;
+
+                  for (double i = 0; i < fs.Length; i += bytesPerChunk)
+                  {
+                     buffer = br.ReadBytes(bytesPerChunk);
+                     bw.Write(buffer);
+                     bytesRead += bytesPerChunk;
+                     moved += bytesPerChunk;
+                     double ret = (moved / toMove) * 100;
+                     Debug.WriteLine("Percent: " + ret + "%");
+                     this.Dispatcher.Invoke(() => {
+                        backgroundWorker1.ReportProgress((int)ret);  //report the progress
+                     });
+                  }
+               }
+            }
+         }
+      }
+
+      // Updates the progressBar value
+      private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+      {
+         progressBar1.Value = e.ProgressPercentage;
+         // Fix for lagging progressBar
+         if (progressBar1.Value > 0)
+         {
+            progressBar1.Value = e.ProgressPercentage - 1;
+            progressBar1.Value = e.ProgressPercentage;
+         }
+         progressBar1.Value = e.ProgressPercentage;
+      }
+
       // Helper function to get the size of a directory
       private static long GetDirectorySize(DirectoryInfo d)
       {
@@ -364,6 +514,89 @@ namespace FileOrganizer
             Size += GetDirectorySize(di);
          }
          return (Size);
+      }
+      #endregion
+
+      private List<TreeViewModel> getChecked()
+      {
+         List<TreeViewModel> check = new List<TreeViewModel>();
+         foreach (TreeViewModel tr in Videos.Items)
+         {
+            foreach (TreeViewModel child in tr.Children)
+            {
+               if (child.Children.Count < 1)
+               {
+                  if (child.IsChecked == true)
+                  {
+                     check.Add(child);
+                  }
+               }
+               else
+               {
+                  foreach (TreeViewModel grandchild in child.Children)
+                  {
+                     if (grandchild.IsChecked == true)
+                     {
+                        check.Add(grandchild);
+                     }
+                  }
+               }
+            }
+         }
+         return check;
+      }
+
+      private bool findNode(TreeViewModel ch)
+      {
+         foreach (TreeViewModel tr in getChecked())
+         {
+            if (ch.Name == tr.Name)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+
+      // Checks all check boxes
+      private void checkAll(bool check)
+      {
+         foreach (TreeViewModel tr in Videos.Items)
+         {
+            tr.IsChecked = check;
+         }
+      }
+
+      // When files are added, removed, or renamed in folders update tree
+      private void OnChanged(object sender, FileSystemEventArgs e)
+      {
+         this.Dispatcher.Invoke(() => {
+            Videos.ItemsSource = TreeViewModel.setTree();
+         });
+
+         foreach (TreeViewModel tr in Videos.Items)
+         {
+            foreach (TreeViewModel child in tr.Children)
+            {
+               if (child.Children.Count < 1)
+               {
+                  if (findNode(child))
+                  {
+                     child.IsChecked = true;
+                  }
+               }
+               else
+               {
+                  foreach (TreeViewModel grandchild in child.Children)
+                  {
+                     if (findNode(grandchild))
+                     {
+                        grandchild.IsChecked = true;
+                     }
+                  }
+               }
+            }
+         }
       }
    }
 }
