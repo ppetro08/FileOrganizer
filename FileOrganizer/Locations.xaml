@@ -1,0 +1,25 @@
+﻿<Window x:Class="FileOrganizer.Locations"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Locations" Width="500" 
+        VerticalAlignment="Top" Height="195" Loaded="Window_Loaded"
+        SizeToContent="Width" ResizeMode="NoResize">
+   <Grid>
+      <Label Content="Torrent Location:" HorizontalAlignment="Left" Margin="10,18,0,0" VerticalAlignment="Top"/>
+      <Label Content="Movies Destination:" HorizontalAlignment="Left" Margin="10,53,0,0" VerticalAlignment="Top"/>
+      <Label Content="TV Show Destination:" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top"/>
+
+      <Grid x:Name="textBoxes" Margin="152,18,42,0" Height="95" Width="300" VerticalAlignment="Top">
+         <TextBox x:Name="txtLocation" Height="25" Margin="0" Text="TextBox" Width="{Binding Path=Width, ElementName=textBoxes}" VerticalAlignment="Top" LostFocus="locLost" />
+         <TextBox x:Name="txtMovies" Height="25" Margin="0,35,0,0" Text="TextBox" Width="{Binding Path=Width, ElementName=textBoxes}" VerticalAlignment="Top" LostFocus="moviesLost" />
+         <TextBox x:Name="txtShows" Height="25" Margin="0,70,0,0" Text="TextBox" Width="{Binding Path=Width, ElementName=textBoxes}" VerticalAlignment="Top" LostFocus="showsLost" />
+      </Grid>
+
+      <Button x:Name="btnLocation" Content="..." HorizontalAlignment="Right" Margin="0,18,10,0" VerticalAlignment="Top" Width="25" Height="25" Click="btnLocation_Click" />
+      <Button x:Name="btnMovies"  Content="..." HorizontalAlignment="Right" Margin="0,53,10,0" VerticalAlignment="Top" Width="25" Height="25" Click="btnMovies_Click" />
+      <Button x:Name="btnShows" Content="..." HorizontalAlignment="Right" Margin="0,88,10,0" VerticalAlignment="Top" Width="25" Height="25" Click="btnShows_Click" />
+
+      <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Right" Margin="0,123,80,0" VerticalAlignment="Top" Width="60" Height="25" Click="btnSave_Click" />
+      <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Right" Margin="0,123,10,0" VerticalAlignment="Top" Width="60" Height="25" Click="btnCancel_Click" />
+   </Grid>
+</Window>

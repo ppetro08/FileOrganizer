@@ -1,7 +1,10 @@
 ﻿<Window x:Class="FileOrganizer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+        Title="Video Mover" Loaded="Window_Loaded"
+        WindowStartupLocation="CenterScreen"
+        MinWidth="280" SizeToContent="WidthAndHeight"
+        MinHeight="300" MaxHeight="800">
    <Window.Resources>
       <ResourceDictionary>
          <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem">
@@ -13,16 +16,31 @@
                </DataTrigger>
             </Style.Triggers>
          </Style>
+         <HierarchicalDataTemplate x:Key="CheckBoxItemTemplate" ItemsSource="{Binding Children, Mode=OneTime}">
+            <StackPanel Orientation="Horizontal">
+               <CheckBox Focusable="False" IsChecked="{Binding IsChecked}" VerticalAlignment="Center" />
+               <ContentPresenter Content="{Binding Name, Mode=OneTime}" Margin="2,0" />
+            </StackPanel>
+         </HierarchicalDataTemplate>
       </ResourceDictionary>
    </Window.Resources>
    <Grid>
-      <TreeView x:Name="Videos" HorizontalAlignment="Left" Height="299" Margin="10,10,0,0" VerticalAlignment="Top" Width="497" 
-                ItemsSource="{Binding TheList}" ItemContainerStyle="{StaticResource TreeViewItemStyle}">
-         <TreeView.ItemTemplate>
-            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-               <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Margin="5 5 0 0"/>
-            </HierarchicalDataTemplate>
-         </TreeView.ItemTemplate>
+      <Menu Height="20" VerticalAlignment="Top">
+         <MenuItem Header="File">
+            <MenuItem Header="Locations" Click="Locations_Click"/>
+            <MenuItem Header="Clean" Click="Clean_Click"/>
+         </MenuItem>
+      </Menu>
+      <TreeView x:Name="Videos" Margin="10, 24, 10, 47"
+            ItemContainerStyle="{StaticResource TreeViewItemStyle}"
+            ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1"
+                  MouseRightButtonDown="files_MouseRightButtonDown">
       </TreeView>
+      <Button x:Name="btnCopy" Content="Copy" Width="60" Height="20" FontSize="11" Click="Copy_Click" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,80,22.5"/>
+      <Button x:Name="btnMove" Content="Move" Width="60" Height="20" FontSize="11" Click="Move_Click" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,10,22.5"/>
+      <ProgressBar x:Name="progressBar1" Height="20" VerticalAlignment="Bottom"/>
+      <TextBlock x:Name="txtProgress" Height="20" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
    </Grid>
 </Window>

@@ -15,8 +15,7 @@ namespace FileOrganizer
       public string file;
       public string extension;
       public string season;
-
-      private string fullpath;
+      public string fullpath;
 
       public Show(string f)
       {
@@ -52,7 +51,7 @@ namespace FileOrganizer
          // Finds where the end of the tv name is based on common torrent names
          for (int i = 0; i < splittv.Length; i++)
          {
-            Match match = Regex.Match(splittv[i], @"s([0-9]{1,2}[0-9]{1,2}.*$)", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(splittv[i], @"s([0-9]{1,2}[0-9]{1,2})", RegexOptions.IgnoreCase);
             if (match.Success)
             {
                mark = i + 1;

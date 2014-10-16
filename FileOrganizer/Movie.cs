@@ -7,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace FileOrganizer
 {
-   public class Movies : StringManipulations
+   public class Movie : StringManipulations
    {
       // Member variables
       public string folder;
       public string file;
       public string extension;
+      public string fullpath;
 
-      private string fullpath;
-
-      public Movies(string f)
+      public Movie(string f)
       {
          fullpath = f;
          file = Path.GetFileNameWithoutExtension(fullpath);
