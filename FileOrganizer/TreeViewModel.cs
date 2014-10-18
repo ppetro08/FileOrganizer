@@ -100,7 +100,8 @@ namespace FileOrganizer
 
          vidStart = nameSplit[0];
          vidEnd = nameSplit.Length > 1 ? nameSplit[nameSplit.Length - 1] : "";
-
+         // TODO: just check to see if the video names are equal
+         // TODO: to optimize the search pass the parents name into dirsearch
          if (tvshows != null && _parent.Name.Contains("season", StringComparison.InvariantCultureIgnoreCase))
          {
             for (int i = 0; i < nameSplit.Length; i++)
