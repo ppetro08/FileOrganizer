@@ -102,8 +102,7 @@ namespace FileOrganizer
 
          vidStart = nameSplit[0];
          vidEnd = nameSplit.Length > 1 ? nameSplit[nameSplit.Length - 1] : "";
-         // TODO: just check to see if the video names are equal
-         // TODO: to optimize the search pass the parents name into dirsearch
+
          if (tvshows != null && _parent.Name.Contains("season", StringComparison.InvariantCultureIgnoreCase))
          {
             for (int i = 0; i < nameSplit.Length; i++)
@@ -158,7 +157,8 @@ namespace FileOrganizer
       {
          foreach (var video in videos)
          {
-            AddItem(video);
+            if (StringManipulations.isVideo(video))
+               AddItem(video);
          }
       }
 
@@ -208,20 +208,8 @@ namespace FileOrganizer
       // Gets each video in the child folders
       public static List<string> DirSearch(string dir)
       {
-         List<string> videos = new List<string>();
-         // Goes through each folder
-         foreach (string d in Directory.GetDirectories(dir))
-         {
-            // Finds each file in folder
-            foreach (string f in Directory.GetFiles(d))
-            {
-               // Gets each video
-               if (StringManipulations.isVideo(f))
-                  videos.Add(f);
-            }
-            DirSearch(d);
-         }
-         return videos;
+         return new List<string>(Directory.GetFiles(dir, 
+            "*.*", SearchOption.AllDirectories));
       }
 
       // Checks for TreeViewItem
@@ -242,19 +230,7 @@ namespace FileOrganizer
       // Sorts the tree by parent name and then childrens names
       private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
       {
-         // Sorts movies
-         //tree.ForEach(x => {
-         //   x.Children = x.Children.OrderBy(g => g.Name).ToList();
-         //});
-
          tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
-
-         // Sorts shows
-         //tree.ForEach(x => {
-         //   x.Children.OrderBy(g => g.Name).ToList().ForEach(y => {
-         //      y.Children = y.Children.OrderBy(h => h.Name).ToList();
-         //   });
-         //});
 
          return tree;
       }
@@ -272,12 +248,12 @@ namespace FileOrganizer
          treeView.Add(movieTree);
          treeView.Add(tvTree);
 
-         PopulateTree(DirSearch(XML.location)); // Populates videos
+         // Populates videos
+         PopulateTree(DirSearch(XML.location)); 
 
          if (tvTree.Children.Count > 0)
          {
             tvTree.Initialize();
-            // TODO: Only call populate onchange
             PopulateDestinationLists(DirSearch(XML.destTV));
          }
          else
@@ -304,15 +280,6 @@ namespace FileOrganizer
          }
       }
       #endregion
-
-      public static List<string> GetSelected()
-      {
-         List<string> selected = new List<string>();
-
-         //select = recursive method to check each tree view item for selection (if required)
-
-         return selected;
-      }
 
       #region Notify
       public event PropertyChangedEventHandler PropertyChanged;

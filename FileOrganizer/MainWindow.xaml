@@ -33,8 +33,7 @@
       </Menu>
       <TreeView x:Name="Videos" Margin="10, 24, 10, 47"
             ItemContainerStyle="{StaticResource TreeViewItemStyle}"
-            ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1"
-                  MouseRightButtonDown="files_MouseRightButtonDown">
+            ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1">
       </TreeView>
       <Button x:Name="btnCopy" Content="Copy" Width="60" Height="20" FontSize="11" Click="Copy_Click" 
                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,80,22.5"/>

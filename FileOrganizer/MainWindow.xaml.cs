@@ -515,11 +515,9 @@ namespace FileOrganizer
          }
       }
 
-      // When files are added, removed, or renamed in folders update tree
+      // When files are renamed in folders update tree
       private void OnRenamed(object sender, FileSystemEventArgs e)
       {
-         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
-         //check for if it's a delete or add e.fullpath
          try
          {
             wLoc.EnableRaisingEvents = false;
@@ -527,7 +525,7 @@ namespace FileOrganizer
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               TreeViewModel.AddItem(e.FullPath);
+               Videos.Items.Refresh();
             });
          }
          finally
@@ -536,11 +534,9 @@ namespace FileOrganizer
          }
       }
 
-      // When files are added, removed, or renamed in folders update tree
+      // When files are added in folders update tree
       private void OnChanged(object sender, FileSystemEventArgs e)
       {
-         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
-         //check for if it's a delete or add e.fullpath
          try
          {
             wLoc.EnableRaisingEvents = false;
@@ -557,19 +553,16 @@ namespace FileOrganizer
          }
       }
 
-      // When files are added, removed, or renamed in folders update tree
+      // When files are removed in folders update tree
       private void OnDeleted(object sender, FileSystemEventArgs e)
       {
-         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
-         //check for if it's a delete or add e.fullpath
          try
          {
             wLoc.EnableRaisingEvents = false;
             wTV.EnableRaisingEvents = false;
             wMov.EnableRaisingEvents = false;
-
             this.Dispatcher.Invoke(() => {
-               TreeViewModel.AddItem(e.FullPath);
+               Videos.Items.Refresh();
             });
          }
          finally
