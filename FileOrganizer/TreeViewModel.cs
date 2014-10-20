@@ -16,7 +16,7 @@ namespace FileOrganizer
    {
       public string Name { get; set; }
       public string FullPath { get; private set; }
-      public List<TreeViewModel> Children { get; private set; }
+      public ObservableCollection<TreeViewModel> Children { get; private set; }
       public static TreeViewModel movieTree;
       public static TreeViewModel tvTree;
       public static List<string> movies = new List<string>();
@@ -29,14 +29,14 @@ namespace FileOrganizer
       public TreeViewModel(string name)
       {
          Name = name;
-         Children = new List<TreeViewModel>();
+         Children = new ObservableCollection<TreeViewModel>();
       }
 
       public TreeViewModel(string name, string fullPath)
       {
          Name = name;
          FullPath = fullPath;
-         Children = new List<TreeViewModel>();
+         Children = new ObservableCollection<TreeViewModel>();
       }
       #endregion
 
@@ -54,9 +54,11 @@ namespace FileOrganizer
 
          isChecked = value;
 
-         if (updateChildren && isChecked.HasValue) Children.ForEach(c => c.SetIsChecked(isChecked, true, false));
+         if (updateChildren && isChecked.HasValue)
+            Children.ToList().ForEach(c => c.SetIsChecked(isChecked, true, false));
 
-         if (updateParent && _parent != null) _parent.VerifyCheckedState();
+         if (updateParent && _parent != null)
+            _parent.VerifyCheckedState();
 
          NotifyPropertyChanged("IsChecked");
       }
@@ -130,7 +132,7 @@ namespace FileOrganizer
                else
                   return false;
             }
-            else 
+            else
             {
                // check if movs video is longer than 1 that is matched
                if (movies.Any(s => s.Split(new char[] { ' ', '.' })[0].Equals(vidStart, StringComparison.InvariantCultureIgnoreCase)
@@ -152,132 +154,74 @@ namespace FileOrganizer
       #endregion
 
       #region Helper Functions
-      // Recursively looks through directory passed in and adds videos to respective parents
-      private void GetTargetLocationVideos(string dir)
+      private static void PopulateTree(List<string> videos)
       {
-         foreach (string f in Directory.GetFiles(dir))
+         foreach (var video in videos)
          {
-            if (StringManipulations.isVideo(f))
-            {
-               if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  tvshows.Add(Path.GetFileNameWithoutExtension(f));
-               }
-               else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  movies.Add(Path.GetFileNameWithoutExtension(f));
-               }
-            }
+            AddItem(video);
          }
-         foreach (string d in Directory.GetDirectories(dir))
+      }
+
+      public static void AddItem(string video)
+      {
+         if (StringManipulations.isMovie(video))
          {
-            if (d != "TV Shows" && d != "Movies")
-            {
-               foreach (string f in Directory.GetFiles(d))
-               {
-                  if (StringManipulations.isVideo(f))
-                  {
-                     if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-                     {
-                        tvshows.Add(Path.GetFileNameWithoutExtension(f));
-                     }
-                     else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-                     {
-                        movies.Add(Path.GetFileNameWithoutExtension(f));
-                     }
-                  }
-               }
-            }
-            GetTargetLocationVideos(d);
+            Movie m = new Movie(video);
+            //System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
+            //if (txtLocation.Text.Trim() == "")
+            //{
+            //   tool.Content = "A location is required";
+            //}
+            //else
+            //{
+            //   tool.Content = "Please enter a valid location";
+            //}
+            //txtLocation.ToolTip = tool;
+            // TODO: add tooltip of file location for dupes
+            movieTree.Children.Add(new TreeViewModel(m.file, video));
+         }
+         else
+         {
+            Show s = new Show(video);
+            // TODO: add tooltip of file location for dupes
+            TreeViewModel season = new TreeViewModel(s.folder + " Season " + s.season);
+            checkTree(season).Children.Add(new TreeViewModel(s.file, video));
          }
       }
 
       // Adds target location video names to movies and tvshows list
-      private static void populateLists(string dir)
+      private static void PopulateDestinationLists(List<string> videos)
       {
-         foreach (string f in Directory.GetFiles(dir))
+         foreach (var video in videos)
          {
-            if (StringManipulations.isVideo(f))
+            if (video.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
             {
-               if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  tvshows.Add(Path.GetFileNameWithoutExtension(f));
-               }
-               else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  movies.Add(Path.GetFileNameWithoutExtension(f));
-               }
+               tvshows.Add(Path.GetFileNameWithoutExtension(video));
             }
-         }
-         foreach (string d in Directory.GetDirectories(dir))
-         {
-            if (d != "TV Shows" && d != "Movies")
+            else if (video.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
             {
-               foreach (string f in Directory.GetFiles(d))
-               {
-                  if (StringManipulations.isVideo(f))
-                  {
-                     if (dir.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-                     {
-                        tvshows.Add(Path.GetFileNameWithoutExtension(f));
-                     }
-                     else if (dir.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-                     {
-                        movies.Add(Path.GetFileNameWithoutExtension(f));
-                     }
-                  }
-               }
+               movies.Add(Path.GetFileNameWithoutExtension(video));
             }
-            populateLists(d);
          }
       }
 
       // Gets each video in the child folders
-      private static void DirSearch(string sDir)
+      public static List<string> DirSearch(string dir)
       {
+         List<string> videos = new List<string>();
          // Goes through each folder
-         foreach (string d in Directory.GetDirectories(sDir))
+         foreach (string d in Directory.GetDirectories(dir))
          {
             // Finds each file in folder
             foreach (string f in Directory.GetFiles(d))
             {
                // Gets each video
                if (StringManipulations.isVideo(f))
-               {
-                  if (StringManipulations.isMovie(f))
-                  {
-                     Movie m = new Movie(f);
-                     //System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
-                     //if (txtLocation.Text.Trim() == "")
-                     //{
-                     //   tool.Content = "A location is required";
-                     //}
-                     //else
-                     //{
-                     //   tool.Content = "Please enter a valid location";
-                     //}
-                     //txtLocation.ToolTip = tool;
-                     // TODO: add tooltip of file location for dupes
-                     movieTree.Children.Add(new TreeViewModel(m.file, f));
-                  }
-                  else
-                  {
-                     Show s = new Show(f);
-                     // TODO: add tooltip of file location for dupes
-                     TreeViewModel season = new TreeViewModel(s.folder + " Season " + s.season);
-                     checkTree(season).Children.Add(new TreeViewModel(s.file, f));
-                  }
-
-                  // TODO: Add directories to a txt file so they save then when cleaning check the location for each folder and if they exist delete them
-                  // then delete the file one the clean button is used
-                  //if (!directories.Contains(d, StringComparison.InvariantCultureIgnoreCase))
-                  //{
-                  //   directories.Add(d, StringComparison.InvariantCultureIgnoreCase);
-                  //}
-               }
+                  videos.Add(f);
             }
             DirSearch(d);
          }
+         return videos;
       }
 
       // Checks for TreeViewItem
@@ -296,19 +240,21 @@ namespace FileOrganizer
       }
 
       // Sorts the tree by parent name and then childrens names
-      private static List<TreeViewModel> sortTree(List<TreeViewModel> tree)
+      private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
       {
          // Sorts movies
-         tree.ForEach(x => {
-            x.Children = x.Children.OrderBy(g => g.Name).ToList();
-         });
+         //tree.ForEach(x => {
+         //   x.Children = x.Children.OrderBy(g => g.Name).ToList();
+         //});
+
+         tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
 
          // Sorts shows
-         tree.ForEach(x => {
-            x.Children.OrderBy(g => g.Name).ToList().ForEach(y => {
-               y.Children = y.Children.OrderBy(h => h.Name).ToList();
-            });
-         });
+         //tree.ForEach(x => {
+         //   x.Children.OrderBy(g => g.Name).ToList().ForEach(y => {
+         //      y.Children = y.Children.OrderBy(h => h.Name).ToList();
+         //   });
+         //});
 
          return tree;
       }
@@ -316,9 +262,9 @@ namespace FileOrganizer
 
       #region Create Tree
       // Returns tree with TV Shows and Movies
-      public static List<TreeViewModel> setTree()
+      public static ObservableCollection<TreeViewModel> setTree()
       {
-         List<TreeViewModel> treeView = new List<TreeViewModel>();
+         ObservableCollection<TreeViewModel> treeView = new ObservableCollection<TreeViewModel>();
          movieTree = new TreeViewModel("Movies");
          tvTree = new TreeViewModel("TV Shows");
 
@@ -326,19 +272,20 @@ namespace FileOrganizer
          treeView.Add(movieTree);
          treeView.Add(tvTree);
 
-         DirSearch(XML.location); // Populates videos
+         PopulateTree(DirSearch(XML.location)); // Populates videos
 
          if (tvTree.Children.Count > 0)
          {
             tvTree.Initialize();
-            populateLists(XML.destTV);
+            // TODO: Only call populate onchange
+            PopulateDestinationLists(DirSearch(XML.destTV));
          }
          else
             treeView.Remove(tvTree);
          if (movieTree.Children.Count > 0)
          {
             movieTree.Initialize();
-            populateLists(XML.destMovies);
+            PopulateDestinationLists(DirSearch(XML.destMovies));
          }
          else
             treeView.Remove(movieTree);

@@ -274,10 +274,16 @@ namespace FileOrganizer
             // Changes public variables values to textbox value
             if (!txtLocation.Text.Trim().EndsWith("\\"))
                XML.location = txtLocation.Text.Trim() + "\\";
+            else
+               XML.location = txtLocation.Text.Trim();
             if (!txtMovies.Text.Trim().EndsWith("\\"))
                XML.destMovies = txtMovies.Text.Trim() + "\\";
+            else
+               XML.destMovies = txtMovies.Text.Trim();
             if (!txtShows.Text.Trim().EndsWith("\\"))
                XML.destTV = txtShows.Text.Trim() + "\\";
+            else
+               XML.destTV = txtShows.Text.Trim();
 
             XML.writeXML();
             this.Close();

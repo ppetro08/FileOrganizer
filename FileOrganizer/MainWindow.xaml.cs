@@ -33,7 +33,7 @@ namespace FileOrganizer
       private double toMove = 0;
       private double moved = 0;
       private List<Locs> locs;
-      private List<string> directories;
+      private string filesToDelete = "FilesToDelete.txt";
       BackgroundWorker backgroundWorker1 = new BackgroundWorker();
 
       struct Locs
@@ -84,20 +84,18 @@ namespace FileOrganizer
          wTV.IncludeSubdirectories = true;
          wMov.IncludeSubdirectories = true;
 
-         // TODO: Try to update with out having to use the onchange method
-
          // Adds event handlers for each directory storing videos
          wLoc.Changed += new FileSystemEventHandler(OnChanged);
-         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
-         wLoc.Renamed += new RenamedEventHandler(OnChanged);
+         wLoc.Deleted += new FileSystemEventHandler(OnDeleted);
+         wLoc.Renamed += new RenamedEventHandler(OnRenamed);
 
          wTV.Changed += new FileSystemEventHandler(OnChanged);
-         wTV.Deleted += new FileSystemEventHandler(OnChanged);
-         wTV.Renamed += new RenamedEventHandler(OnChanged);
+         wTV.Deleted += new FileSystemEventHandler(OnDeleted);
+         wTV.Renamed += new RenamedEventHandler(OnRenamed);
 
          wMov.Changed += new FileSystemEventHandler(OnChanged);
-         wMov.Deleted += new FileSystemEventHandler(OnChanged);
-         wMov.Renamed += new RenamedEventHandler(OnChanged);
+         wMov.Deleted += new FileSystemEventHandler(OnDeleted);
+         wMov.Renamed += new RenamedEventHandler(OnRenamed);
 
          // Begins watching
          wLoc.EnableRaisingEvents = true;
@@ -155,6 +153,7 @@ namespace FileOrganizer
          cm.IsOpen = true;
          treeViewItem.ContextMenu = cm;
       }
+
       private void rename_Click(object sender, EventArgs e)
       {
          // TODO: Change input box
@@ -183,45 +182,67 @@ namespace FileOrganizer
          createLocationWindow();
       }
 
+      #region Clean Directory
+      private List<string> CheckFile(string filesToDelete)
+      {
+         if (File.Exists(filesToDelete))
+         {
+            List<string> AllLines = new List<string>();
+            using (StreamReader sr = File.OpenText(filesToDelete))
+            {
+               while (!sr.EndOfStream)
+               {
+                  AllLines.Add(sr.ReadLine());
+               }
+            }
+            return AllLines;
+         }
+         else
+         {
+            return new List<string>();
+         }
+      }
+
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
       {
-         // TODO: Fix cleanup
-         //try
-         //{
-         //   DirSearch(XML.location);
-         //   foreach (string dir in directories)
-         //   {
-         //      Debug.WriteLine("Directories to Delete: " + dir);
-         //      FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-         //   }
-         //}
-         //catch (IOException ex)
-         //{
-         //   Debug.WriteLine(ex);
-         //}
-      }
-
-      // Supplemental method for cleanup
-      // Gets each video in the child folders
-      private void DirSearch(string sDir)
-      {
-         // TODO: Fix cleanup dirsearch function
-         // Goes through each folder
-         foreach (string d in Directory.GetDirectories(sDir))
+         try
          {
-            //Finds each file in folder
-            if (GetDirectorySize(new DirectoryInfo(d)) < (1024 * 1024))
+            var itemsToDelete = CheckFile(filesToDelete);
+
+            if (!itemsToDelete.Any())
+               return;
+
+            FileAttributes attr = File.GetAttributes(@"C:\Temp");
+            foreach (string item in itemsToDelete)
             {
-               //Ensures one level up directory is not already listed to be deleted
-               if (!directories.Contains(Path.GetDirectoryName(d)))
+               if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
                {
-                  directories.Add(d);
+                  Debug.WriteLine("Directories to Delete: " + item);
+                  FileSystem.DeleteDirectory(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+               }
+               else
+               {
+                  FileSystem.DeleteFile(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                }
             }
-            DirSearch(d);
+         }
+         catch (IOException ex)
+         {
+            Debug.WriteLine(ex);
          }
       }
+
+      private void AddFileToDelete(string file)
+      {
+         var dir = Path.GetDirectoryName(file);
+
+         if (dir == XML.location || TreeViewModel.DirSearch(dir).Count() > 1)
+            File.AppendAllText(filesToDelete, file + Environment.NewLine);
+         else
+            File.AppendAllText(filesToDelete, dir + Environment.NewLine);
+      }
+      #endregion
 
       #region Move Files
       // Copies files that are selected to destinations
@@ -265,12 +286,6 @@ namespace FileOrganizer
 
                   FileInfo fi = new FileInfo(child.FullPath);
                   toMove += fi.Length;
-
-                  string pathdir = Path.GetDirectoryName(child.FullPath);
-                  if (pathdir != XML.location)
-                  {
-                     getDir(child.FullPath);
-                  }
                }
             }
             else
@@ -290,69 +305,13 @@ namespace FileOrganizer
 
                         FileInfo fi = new FileInfo(ch.FullPath);
                         toMove += fi.Length;
-
-                        string pathdir = Path.GetDirectoryName(ch.FullPath);
-                        if (pathdir != XML.location)
-                        {
-                           getDir(ch.FullPath);
-                        }
                      }
                   }
                }
             }
          }
       }
-      // Gets the directory the show came from
-      private void getDir(string fullp)
-      {
-         string[] splitdir = fullp.Split('\\');
-         string test = XML.location.Split('\\').Last();
-         int pos = Array.IndexOf(splitdir, test);
-         string dir = "";
-         for (int i = 0; i != pos + 2; i++)
-         {
-            if (i == 0)
-            {
-               dir = splitdir[i]; ;
-            }
-            else
-            {
-               dir = dir + "\\" + splitdir[i];
-            }
-         }
-         if (directories.FindIndex(x => x == dir) < 0)
-         {
-            directories.Add(dir);
-         }
-      }
-      // Gets each video in the child folders
-      private static bool vidSearch(string sDir)
-      {
-         // Finds each file in folder
-         foreach (string f in Directory.GetFiles(sDir))
-         {
-            // Gets each video
-            if (StringManipulations.isVideo(f))
-            {
-               return true;
-            }
-         }
-         // Goes through each folder
-         foreach (string d in Directory.GetDirectories(sDir))
-         {
-            // Finds each file in folder
-            foreach (string f in Directory.GetFiles(d))
-            {
-               // Gets each video
-               if (StringManipulations.isVideo(f))
-               {
-                  return true;
-               }
-            }
-            vidSearch(d);
-         }
-         return false;
-      }
+
       // Creates and returns folder for tv show
       private string createFolders(string fold)
       {
@@ -372,25 +331,14 @@ namespace FileOrganizer
                seasonFold = string.Join(" ", seasonFold, splitfold[i]);
             }
          }
-         folder = folder.Trim();
-         seasonFold = seasonFold.Trim();
 
          // Creates directories if they do not exists
-         if (Directory.Exists(XML.destTV))
+         if (!Directory.Exists(XML.destTV + folder))
          {
-            if (!Directory.Exists(XML.destTV + folder))
-            {
-               Directory.CreateDirectory(XML.destTV + folder); // Creates show folder
-            }
-            if (!Directory.Exists(XML.destTV + folder + "\\" + seasonFold))
-            {
-               Directory.CreateDirectory(XML.destTV + folder + "\\" + seasonFold); // Creates season folder
-            }
-         }
-         else
-         {
-            Directory.CreateDirectory(XML.destTV); // Creates directory to move
             Directory.CreateDirectory(XML.destTV + folder); // Creates show folder
+         }
+         if (!Directory.Exists(XML.destTV + folder + "\\" + seasonFold))
+         {
             Directory.CreateDirectory(XML.destTV + folder + "\\" + seasonFold); // Creates season folder
          }
 
@@ -414,7 +362,7 @@ namespace FileOrganizer
                   try
                   {
                      CopyFile(l.cur, l.dest);
-                     directories.Add(Path.GetDirectoryName(l.cur));
+                     AddFileToDelete(l.cur);
                   }
                   catch (Exception ex)
                   {
@@ -568,34 +516,65 @@ namespace FileOrganizer
       }
 
       // When files are added, removed, or renamed in folders update tree
+      private void OnRenamed(object sender, FileSystemEventArgs e)
+      {
+         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
+         //check for if it's a delete or add e.fullpath
+         try
+         {
+            wLoc.EnableRaisingEvents = false;
+            wTV.EnableRaisingEvents = false;
+            wMov.EnableRaisingEvents = false;
+
+            this.Dispatcher.Invoke(() => {
+               TreeViewModel.AddItem(e.FullPath);
+            });
+         }
+         finally
+         {
+            wLoc.EnableRaisingEvents = true;
+         }
+      }
+
+      // When files are added, removed, or renamed in folders update tree
       private void OnChanged(object sender, FileSystemEventArgs e)
       {
-         this.Dispatcher.Invoke(() => {
-            Videos.ItemsSource = TreeViewModel.setTree();
-         });
-
-         foreach (TreeViewModel tr in Videos.Items)
+         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
+         //check for if it's a delete or add e.fullpath
+         try
          {
-            foreach (TreeViewModel child in tr.Children)
-            {
-               if (child.Children.Count < 1)
-               {
-                  if (findNode(child))
-                  {
-                     child.IsChecked = true;
-                  }
-               }
-               else
-               {
-                  foreach (TreeViewModel grandchild in child.Children)
-                  {
-                     if (findNode(grandchild))
-                     {
-                        grandchild.IsChecked = true;
-                     }
-                  }
-               }
-            }
+            wLoc.EnableRaisingEvents = false;
+            wTV.EnableRaisingEvents = false;
+            wMov.EnableRaisingEvents = false;
+
+            this.Dispatcher.Invoke(() => {
+               TreeViewModel.AddItem(e.FullPath);
+            });
+         }
+         finally
+         {
+            wLoc.EnableRaisingEvents = true;
+         }
+      }
+
+      // When files are added, removed, or renamed in folders update tree
+      private void OnDeleted(object sender, FileSystemEventArgs e)
+      {
+         // TODO: Try to update with out having to reset entire tree, refresh just the node that was added deleted or refreshed
+         //check for if it's a delete or add e.fullpath
+         try
+         {
+            wLoc.EnableRaisingEvents = false;
+            wTV.EnableRaisingEvents = false;
+            wMov.EnableRaisingEvents = false;
+
+            this.Dispatcher.Invoke(() => {
+               TreeViewModel.AddItem(e.FullPath);
+            });
+         }
+         finally
+         {
+            wLoc.EnableRaisingEvents = true;
          }
       }
    }
