@@ -18,6 +18,7 @@ using System.Windows.Forms;
 using System.Collections.ObjectModel;
 using Microsoft.VisualBasic.FileIO;
 using System.Threading;
+using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -85,16 +86,17 @@ namespace FileOrganizer
          wMov.IncludeSubdirectories = true;
 
          // Adds event handlers for each directory storing videos
+         wLoc.Created += new FileSystemEventHandler(OnChanged);
          wLoc.Changed += new FileSystemEventHandler(OnChanged);
-         wLoc.Deleted += new FileSystemEventHandler(OnDeleted);
+         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
          wLoc.Renamed += new RenamedEventHandler(OnRenamed);
 
          wTV.Changed += new FileSystemEventHandler(OnChanged);
-         wTV.Deleted += new FileSystemEventHandler(OnDeleted);
+         wTV.Deleted += new FileSystemEventHandler(OnChanged);
          wTV.Renamed += new RenamedEventHandler(OnRenamed);
 
          wMov.Changed += new FileSystemEventHandler(OnChanged);
-         wMov.Deleted += new FileSystemEventHandler(OnDeleted);
+         wMov.Deleted += new FileSystemEventHandler(OnChanged);
          wMov.Renamed += new RenamedEventHandler(OnRenamed);
 
          // Begins watching
@@ -422,7 +424,6 @@ namespace FileOrganizer
                      bytesRead += bytesPerChunk;
                      moved += bytesPerChunk;
                      double ret = (moved / toMove) * 100;
-                     Debug.WriteLine("Percent: " + ret + "%");
                      this.Dispatcher.Invoke(() => {
                         backgroundWorker1.ReportProgress((int)ret);  //report the progress
                      });
@@ -494,18 +495,6 @@ namespace FileOrganizer
          return check;
       }
 
-      private bool findNode(TreeViewModel ch)
-      {
-         foreach (TreeViewModel tr in getChecked())
-         {
-            if (ch.Name == tr.Name)
-            {
-               return true;
-            }
-         }
-         return false;
-      }
-
       // Checks all check boxes
       private void checkAll(bool check)
       {
@@ -516,7 +505,7 @@ namespace FileOrganizer
       }
 
       // When files are renamed in folders update tree
-      private void OnRenamed(object sender, FileSystemEventArgs e)
+      private void OnRenamed(object sender, RenamedEventArgs e)
       {
          try
          {
@@ -525,7 +514,7 @@ namespace FileOrganizer
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               Videos.Items.Refresh();
+               TreeViewModel.RenameItem(e.OldFullPath, e.FullPath);
             });
          }
          finally
@@ -544,25 +533,12 @@ namespace FileOrganizer
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               TreeViewModel.AddItem(e.FullPath);
-            });
-         }
-         finally
-         {
-            wLoc.EnableRaisingEvents = true;
-         }
-      }
-
-      // When files are removed in folders update tree
-      private void OnDeleted(object sender, FileSystemEventArgs e)
-      {
-         try
-         {
-            wLoc.EnableRaisingEvents = false;
-            wTV.EnableRaisingEvents = false;
-            wMov.EnableRaisingEvents = false;
-            this.Dispatcher.Invoke(() => {
-               Videos.Items.Refresh();
+               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) || e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
+                 TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+               else if (e.ChangeType == WatcherChangeTypes.Created)
+                  TreeViewModel.AddItem(e.FullPath);
+               else if (e.ChangeType == WatcherChangeTypes.Deleted)
+                  TreeViewModel.DeleteItem(e.FullPath);
             });
          }
          finally

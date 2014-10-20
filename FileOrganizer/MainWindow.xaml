@@ -9,8 +9,27 @@
       <ResourceDictionary>
          <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem">
             <Setter Property="IsExpanded" Value="True" />
-            <Setter Property="KeyboardNavigation.AcceptsReturn" Value="True" />
+            
+            <Setter Property="HeaderTemplate">
+               <Setter.Value>
+                  <DataTemplate>
+                     <TextBlock Text="{Binding}" />
+                  </DataTemplate>
+               </Setter.Value>
+            </Setter>
+            
             <Style.Triggers>
+               <Trigger Property="IsSelected" Value="true">
+                  <Setter Property="HeaderTemplate">
+                     <Setter.Value>
+                        <DataTemplate>
+                           <!-- Must use RelativeSource, since we can't TwoWay bind without a Path -->
+                           <TextBox Text="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}}, Path=Name}" />
+                        </DataTemplate>
+                     </Setter.Value>
+                  </Setter>
+               </Trigger>
+
                <DataTrigger Binding="{Binding Exists}"  Value="True">
                   <Setter Property="Foreground" Value="Red" />
                </DataTrigger>

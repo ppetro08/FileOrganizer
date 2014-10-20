@@ -97,7 +97,7 @@ namespace FileOrganizer
             }
 
             // Changes the name of the folder to include the title of the show
-            if (i < mark - 1)
+            if (i < mark - 1 && i != 0)
                folder = folder + " " + UppercaseFirst(splittv[i]);
          }
 

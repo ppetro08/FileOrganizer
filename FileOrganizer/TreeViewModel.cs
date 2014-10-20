@@ -162,44 +162,84 @@ namespace FileOrganizer
          }
       }
 
-      public static void AddItem(string video)
+      public static void RenameItem(string oldFullPath, string newFullPath)
       {
-         if (StringManipulations.isMovie(video))
+         if (StringManipulations.isMovie(oldFullPath))
          {
-            Movie m = new Movie(video);
-            //System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
-            //if (txtLocation.Text.Trim() == "")
-            //{
-            //   tool.Content = "A location is required";
-            //}
-            //else
-            //{
-            //   tool.Content = "Please enter a valid location";
-            //}
-            //txtLocation.ToolTip = tool;
-            // TODO: add tooltip of file location for dupes
-            movieTree.Children.Add(new TreeViewModel(m.file, video));
+            var item = movieTree.Children.First(c => c.FullPath == oldFullPath);
+
+            Movie m = new Movie(newFullPath);
+            item.Name = m.file;
+            item.FullPath = m.fullpath;
          }
          else
          {
-            Show s = new Show(video);
-            // TODO: add tooltip of file location for dupes
+            Show s = new Show(oldFullPath);
+            var season = new TreeViewModel(s.folder + " Season " + s.season);
+            var item = checkTree(season).Children.First(c => c.FullPath == oldFullPath);
+
+            Show ns = new Show(newFullPath);
+            var newSeason = new TreeViewModel(ns.folder + " Season " + ns.season);
+
+            if (season != newSeason)
+            {
+               checkTree(season).Children.Remove(item);
+               checkTree(season).Children.Add(new TreeViewModel(ns.file, newFullPath));
+            }
+            else
+            {
+               item.Name = ns.file;
+               item.FullPath = ns.fullpath;
+            }
+         }
+      }
+
+      public static void DeleteItem(string fullPath)
+      {
+         if (StringManipulations.isMovie(fullPath))
+         {
+            var item = movieTree.Children.First(c => c.FullPath == fullPath);
+
+            movieTree.Children.Remove(item);
+         }
+         else
+         {
+            Show s = new Show(fullPath);
+            var season = new TreeViewModel(s.folder + " Season " + s.season);
+            var item = checkTree(season).Children.First(c => c.FullPath == fullPath);
+            checkTree(season).Children.Remove(item);
+         }
+      }
+
+      public static void AddItem(string fullPath)
+      {
+         if (StringManipulations.isMovie(fullPath))
+         {
+            Movie m = new Movie(fullPath);
+            movieTree.Children.Add(new TreeViewModel(m.file, fullPath));
+
+         }
+         else
+         {
+            Show s = new Show(fullPath);
             TreeViewModel season = new TreeViewModel(s.folder + " Season " + s.season);
-            checkTree(season).Children.Add(new TreeViewModel(s.file, video));
+            checkTree(season).Children.Add(new TreeViewModel(s.file, fullPath));
          }
       }
 
       // Adds target location video names to movies and tvshows list
-      private static void PopulateDestinationLists(List<string> videos)
+      public static void PopulateDestinationLists(List<string> videos)
       {
          foreach (var video in videos)
          {
             if (video.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
             {
+               tvshows = new List<string>();
                tvshows.Add(Path.GetFileNameWithoutExtension(video));
             }
             else if (video.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
             {
+               movies = new List<string>();
                movies.Add(Path.GetFileNameWithoutExtension(video));
             }
          }
@@ -208,7 +248,7 @@ namespace FileOrganizer
       // Gets each video in the child folders
       public static List<string> DirSearch(string dir)
       {
-         return new List<string>(Directory.GetFiles(dir, 
+         return new List<string>(Directory.GetFiles(dir,
             "*.*", SearchOption.AllDirectories));
       }
 
@@ -249,7 +289,7 @@ namespace FileOrganizer
          treeView.Add(tvTree);
 
          // Populates videos
-         PopulateTree(DirSearch(XML.location)); 
+         PopulateTree(DirSearch(XML.location));
 
          if (tvTree.Children.Count > 0)
          {

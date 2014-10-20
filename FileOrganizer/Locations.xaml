@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Locations" Width="500" 
         VerticalAlignment="Top" Height="195" Loaded="Window_Loaded"
+        WindowStartupLocation="CenterOwner"
         SizeToContent="Width" ResizeMode="NoResize">
    <Grid>
       <Label Content="Torrent Location:" HorizontalAlignment="Left" Margin="10,18,0,0" VerticalAlignment="Top"/>
