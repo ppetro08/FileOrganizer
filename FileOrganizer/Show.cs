@@ -97,8 +97,8 @@ namespace FileOrganizer
             }
 
             // Changes the name of the folder to include the title of the show
-            if (i < mark - 1)
-               folder = folder + " " + UppercaseFirst(splittv[i]);
+            //if (i < mark - 1)
+            //   folder = folder + " " + UppercaseFirst(splittv[i]);
          }
 
          if (!file.Contains("part", StringComparison.InvariantCultureIgnoreCase))

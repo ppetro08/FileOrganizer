@@ -493,19 +493,7 @@ namespace FileOrganizer
          }
          return check;
       }
-
-      private bool findNode(TreeViewModel ch)
-      {
-         foreach (TreeViewModel tr in getChecked())
-         {
-            if (ch.Name == tr.Name)
-            {
-               return true;
-            }
-         }
-         return false;
-      }
-
+      
       // Checks all check boxes
       private void checkAll(bool check)
       {
@@ -515,6 +503,7 @@ namespace FileOrganizer
          }
       }
 
+      #region OnChange Methods
       // When files are renamed in folders update tree
       private void OnRenamed(object sender, FileSystemEventArgs e)
       {
@@ -570,5 +559,6 @@ namespace FileOrganizer
             wLoc.EnableRaisingEvents = true;
          }
       }
+      #endregion
    }
 }

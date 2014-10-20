@@ -208,8 +208,7 @@ namespace FileOrganizer
       // Gets each video in the child folders
       public static List<string> DirSearch(string dir)
       {
-         return new List<string>(Directory.GetFiles(dir, 
-            "*.*", SearchOption.AllDirectories));
+         return new List<string>(Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
       }
 
       // Checks for TreeViewItem
@@ -225,14 +224,6 @@ namespace FileOrganizer
 
          tvTree.Children.Add(season);
          return season;
-      }
-
-      // Sorts the tree by parent name and then childrens names
-      private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
-      {
-         tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
-
-         return tree;
       }
       #endregion
 
@@ -265,8 +256,6 @@ namespace FileOrganizer
          }
          else
             treeView.Remove(movieTree);
-
-         treeView = sortTree(treeView);
 
          return treeView;
       }
