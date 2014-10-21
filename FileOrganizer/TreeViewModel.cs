@@ -4,11 +4,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CustomExtensions;
 using System.Text.RegularExpressions;
-using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -95,7 +92,9 @@ namespace FileOrganizer
       public bool fileExists(string name)
       {
          if (_parent == null)
+         {
             return false;
+         }
 
          string vidStart, vidEnd;
          var nameSplit = name.Split(new char[] { ' ', '.' });
@@ -171,6 +170,7 @@ namespace FileOrganizer
             Movie m = new Movie(newFullPath);
             item.Name = m.file;
             item.FullPath = m.fullpath;
+            movieTree.Children = sortTree(movieTree.Children);
          }
          else
          {
@@ -184,13 +184,18 @@ namespace FileOrganizer
             if (season != newSeason)
             {
                checkTree(season).Children.Remove(item);
-               checkTree(season).Children.Add(new TreeViewModel(ns.file, newFullPath));
+
+               if (tvTree.Children.First(c => c.Name == checkTree(season).Name).Children.Count() == 0)
+                  tvTree.Children.Remove(checkTree(season));
+               
+               checkTree(newSeason).Children.Add(new TreeViewModel(ns.file, newFullPath));
             }
             else
             {
                item.Name = ns.file;
                item.FullPath = ns.fullpath;
             }
+            tvTree.Children = sortTree(tvTree.Children);
          }
       }
 
@@ -201,6 +206,7 @@ namespace FileOrganizer
             var item = movieTree.Children.First(c => c.FullPath == fullPath);
 
             movieTree.Children.Remove(item);
+            movieTree.Children = sortTree(movieTree.Children);
          }
          else
          {
@@ -208,6 +214,11 @@ namespace FileOrganizer
             var season = new TreeViewModel(s.folder + " Season " + s.season);
             var item = checkTree(season).Children.First(c => c.FullPath == fullPath);
             checkTree(season).Children.Remove(item);
+
+            if (tvTree.Children.First(c => c.Name == checkTree(season).Name).Children.Count() == 0)
+               tvTree.Children.Remove(checkTree(season));
+
+            tvTree.Children = sortTree(tvTree.Children);
          }
       }
 
@@ -217,13 +228,14 @@ namespace FileOrganizer
          {
             Movie m = new Movie(fullPath);
             movieTree.Children.Add(new TreeViewModel(m.file, fullPath));
-
+            movieTree.Children = sortTree(movieTree.Children);
          }
          else
          {
             Show s = new Show(fullPath);
             TreeViewModel season = new TreeViewModel(s.folder + " Season " + s.season);
             checkTree(season).Children.Add(new TreeViewModel(s.file, fullPath));
+            tvTree.Children = sortTree(tvTree.Children);
          }
       }
 
@@ -234,12 +246,10 @@ namespace FileOrganizer
          {
             if (video.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
             {
-               tvshows = new List<string>();
                tvshows.Add(Path.GetFileNameWithoutExtension(video));
             }
             else if (video.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
             {
-               movies = new List<string>();
                movies.Add(Path.GetFileNameWithoutExtension(video));
             }
          }
@@ -267,12 +277,12 @@ namespace FileOrganizer
       }
 
       // Sorts the tree by parent name and then childrens names
-      //private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
-      //{
-      //   tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
+      private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
+      {
+         tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
 
-      //   return tree;
-      //}
+         return tree;
+      }
       #endregion
 
       #region Create Tree
@@ -305,7 +315,7 @@ namespace FileOrganizer
          else
             treeView.Remove(movieTree);
 
-         //treeView = sortTree(treeView);
+         treeView = sortTree(treeView);
 
          return treeView;
       }

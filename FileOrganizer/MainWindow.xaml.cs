@@ -2,22 +2,14 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Diagnostics;
 using System.ComponentModel;
-using System.Windows.Forms;
-using System.Collections.ObjectModel;
 using Microsoft.VisualBasic.FileIO;
-using System.Threading;
 using CustomExtensions;
 
 namespace FileOrganizer
@@ -269,6 +261,7 @@ namespace FileOrganizer
          }
          backgroundWorker1.RunWorkerAsync(false);
       }
+
       // Populates the list of files to be moved
       private void getFilesSize(TreeViewModel t)
       {
@@ -326,11 +319,11 @@ namespace FileOrganizer
          {
             if (i < splitfold.Length - 2)
             {
-               folder = string.Join(" ", folder, splitfold[i]);
+               folder = folder == "" ? splitfold[i] : folder + " " + splitfold[i];
             }
             else
             {
-               seasonFold = string.Join(" ", seasonFold, splitfold[i]);
+               seasonFold = seasonFold == "" ? splitfold[i] : seasonFold + " " + splitfold[i];
             }
          }
 
@@ -515,12 +508,26 @@ namespace FileOrganizer
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               TreeViewModel.RenameItem(e.OldFullPath, e.FullPath);
+               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
+                  e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
+               {
+                  TreeViewModel.tvshows = new List<string>();
+                  TreeViewModel.movies = new List<string>();
+                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
+               }
+               else
+               {
+                  TreeViewModel.RenameItem(e.OldFullPath, e.FullPath);
+               }
+               Videos.Items.Refresh();
             });
          }
          finally
          {
             wLoc.EnableRaisingEvents = true;
+            wTV.EnableRaisingEvents = true;
+            wMov.EnableRaisingEvents = true;
          }
       }
 
@@ -534,17 +541,30 @@ namespace FileOrganizer
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) || e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-                 TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) || 
+                  e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
+               {
+                  TreeViewModel.tvshows = new List<string>();
+                  TreeViewModel.movies = new List<string>();
+                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
+               }
                else if (e.ChangeType == WatcherChangeTypes.Created)
+               {
                   TreeViewModel.AddItem(e.FullPath);
+               }
                else if (e.ChangeType == WatcherChangeTypes.Deleted)
+               {
                   TreeViewModel.DeleteItem(e.FullPath);
+               }
+               Videos.Items.Refresh();
             });
          }
          finally
          {
             wLoc.EnableRaisingEvents = true;
+            wTV.EnableRaisingEvents = true;
+            wMov.EnableRaisingEvents = true;
          }
       }
       #endregion
