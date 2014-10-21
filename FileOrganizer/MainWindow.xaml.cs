@@ -207,6 +207,7 @@ namespace FileOrganizer
             if (!itemsToDelete.Any())
                return;
 
+            // TODO: File attr throwing exception
             FileAttributes attr = File.GetAttributes(@"C:\Temp");
             foreach (string item in itemsToDelete)
             {
@@ -229,12 +230,15 @@ namespace FileOrganizer
 
       private void AddFileToDelete(string file)
       {
-         var dir = Path.GetDirectoryName(file);
+         using (StreamWriter f = File.AppendText(filesToDelete))
+         { 
+            var dir = Path.GetDirectoryName(file);
+            if (dir == XML.location || TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() > 1)
+               f.Write(file + Environment.NewLine);
+            else
+               f.Write(dir + Environment.NewLine);
 
-         if (dir == XML.location || TreeViewModel.DirSearch(dir).Count() > 1)
-            File.AppendAllText(filesToDelete, file + Environment.NewLine);
-         else
-            File.AppendAllText(filesToDelete, dir + Environment.NewLine);
+         }
       }
       #endregion
 
@@ -536,6 +540,8 @@ namespace FileOrganizer
       {
          try
          {
+            // TODO: Look @ http://stackoverflow.com/questions/1572468/filesystemwatcher-does-not-work-properly-when-many-files-are-added-to-the-direct
+                  // to fix removing or adding multiple files at the same time
             wLoc.EnableRaisingEvents = false;
             wTV.EnableRaisingEvents = false;
             wMov.EnableRaisingEvents = false;

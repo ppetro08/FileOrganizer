@@ -4,7 +4,7 @@ using System.Xml;
 
 namespace FileOrganizer
 {
-   class XML
+   public class XML
    {
       public static string location;
       public static string destMovies;

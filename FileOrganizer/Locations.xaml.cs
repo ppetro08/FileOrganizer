@@ -31,46 +31,66 @@ namespace FileOrganizer
       // Validation for textboxes
       #region TextBox Validation
       // Check if all checkboxes are validated
-      /*private void validation() {
-          boxValidation("location");
-          boxValidation("movies");
-          boxValidation("shows");
+      private void validation() {
+         if (txtLocation.Text.Trim().Length != 0)
+         {
+            if (Directory.Exists(txtLocation.Text.Trim()))
+               _validation = true;
+            else
+               _validation = false;
+         }
+         if (txtMovies.Text.Trim().Length != 0)
+         {
+            if (Directory.Exists(txtMovies.Text.Trim()))
+               _validation = true;
+            else
+               _validation = false;
+         }
+         if (txtShows.Text.Trim().Length != 0)
+         {
+            if (Directory.Exists(txtShows.Text.Trim()))
+               _validation = true;
+            else
+               _validation = false;
+         }
       }
-      // Validates individual textboxes
-      private void boxValidation(string box) {
-          if (box == "location") {
-              textBox = txtLocation;
-          } else if (box == "movies") {
-              textBox = txtMovies;
-          } else {
-              textBox = txtShows;
-          }
 
-          if (textBox.Text.Trim().Length != 0) {
-              if (Directory.Exists(textBox.Text.Trim())) {
-                  textBox.MouseEnter -= txtTool; // Removes handler
-                  textBox.ToolTip = null; // Removes tooltip
-                  textBox.ClearValue(BackgroundProperty); // Resets background property to default
-                  textBox.ClearValue(BorderBrushProperty); // Resets border property to default
-              } else {
-                  textBox.BorderBrush = Brushes.Red;
-                  textBox.BorderThickness = new Thickness(1);
-                  Color c = Colors.Red;
-                  c.A = 20;
-                  textBox.Background = new SolidColorBrush(c);
-                  textBox.MouseEnter += txtTool;
-                  _validation = false;
-              }
-          } else {
-              textBox.BorderBrush = Brushes.Red;
-              textBox.BorderThickness = new Thickness(1);
-              Color c = Colors.Red;
-              c.A = 20;
-              textBox.Background = new SolidColorBrush(c);
-              textBox.MouseEnter += txtTool;
-              _validation = false;
-          }
-      }*/
+      // Validates individual textboxes
+      //private void boxValidation(string box) {
+      //    if (box == "location") {
+      //        textBox = txtLocation;
+      //    } else if (box == "movies") {
+      //        textBox = txtMovies;
+      //    } else {
+      //        textBox = txtShows;
+      //    }
+
+      //    if (textBox.Text.Trim().Length != 0) {
+      //        if (Directory.Exists(textBox.Text.Trim())) {
+      //            textBox.MouseEnter -= txtTool; // Removes handler
+      //            textBox.ToolTip = null; // Removes tooltip
+      //            textBox.ClearValue(BackgroundProperty); // Resets background property to default
+      //            textBox.ClearValue(BorderBrushProperty); // Resets border property to default
+      //        } else {
+      //            textBox.BorderBrush = Brushes.Red;
+      //            textBox.BorderThickness = new Thickness(1);
+      //            Color c = Colors.Red;
+      //            c.A = 20;
+      //            textBox.Background = new SolidColorBrush(c);
+      //            textBox.MouseEnter += txtTool;
+      //            _validation = false;
+      //        }
+      //    } else {
+      //        textBox.BorderBrush = Brushes.Red;
+      //        textBox.BorderThickness = new Thickness(1);
+      //        Color c = Colors.Red;
+      //        c.A = 20;
+      //        textBox.Background = new SolidColorBrush(c);
+      //        textBox.MouseEnter += txtTool;
+      //        _validation = false;
+      //    }
+      //}
+
       // Lost focus handler for locations
       private void locLost(object sender, RoutedEventArgs e)
       {
@@ -275,7 +295,7 @@ namespace FileOrganizer
          }
          else
          {
-            return;
+            System.Windows.MessageBox.Show("The locations entered are not valid.", "Invalid Locations", MessageBoxButton.OK, MessageBoxImage.Error);
          }
       }
       // Closes the window without saving
@@ -287,8 +307,16 @@ namespace FileOrganizer
 
       protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
       {
-         base.OnClosing(e);
-         System.Windows.Application.Current.MainWindow.IsEnabled = true;
+         if (_validation)
+         {
+            base.OnClosing(e);
+            System.Windows.Application.Current.MainWindow.IsEnabled = true;
+         }
+         else
+         {
+            System.Windows.MessageBox.Show("The locations entered are not valid.", "Invalid Locations", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Cancel = true;
+         }
       }
    }
 }
