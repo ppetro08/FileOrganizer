@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -248,8 +248,7 @@ namespace FileOrganizer
       // Gets each video in the child folders
       public static List<string> DirSearch(string dir)
       {
-         return new List<string>(Directory.GetFiles(dir,
-            "*.*", SearchOption.AllDirectories));
+         return new List<string>(Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
       }
 
       // Checks for TreeViewItem
@@ -268,12 +267,12 @@ namespace FileOrganizer
       }
 
       // Sorts the tree by parent name and then childrens names
-      private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
-      {
-         tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
+      //private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
+      //{
+      //   tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
 
-         return tree;
-      }
+      //   return tree;
+      //}
       #endregion
 
       #region Create Tree
@@ -306,7 +305,7 @@ namespace FileOrganizer
          else
             treeView.Remove(movieTree);
 
-         treeView = sortTree(treeView);
+         //treeView = sortTree(treeView);
 
          return treeView;
       }

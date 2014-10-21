@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -504,6 +504,7 @@ namespace FileOrganizer
          }
       }
 
+      #region OnChange Methods
       // When files are renamed in folders update tree
       private void OnRenamed(object sender, RenamedEventArgs e)
       {
@@ -546,5 +547,6 @@ namespace FileOrganizer
             wLoc.EnableRaisingEvents = true;
          }
       }
+      #endregion
    }
 }
