@@ -177,7 +177,7 @@ namespace FileOrganizer
       }
 
       #region Clean Directory
-      private List<string> CheckFile(string filesToDelete)
+      private List<string> ReadFile(string filesToDelete)
       {
          if (File.Exists(filesToDelete))
          {
@@ -197,20 +197,24 @@ namespace FileOrganizer
          }
       }
 
+      private void DeleteLine(List<string> lines)
+      {
+         File.WriteAllLines(filesToDelete, File.ReadLines(filesToDelete).Where(l => !lines.Contains(l)).ToList());
+      }
+
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
       {
-         try
+         var itemsToDelete = ReadFile(filesToDelete);
+
+         if (!itemsToDelete.Any())
+            return;
+
+         foreach (string item in itemsToDelete)
          {
-            var itemsToDelete = CheckFile(filesToDelete);
-
-            if (!itemsToDelete.Any())
-               return;
-
-            // TODO: File attr throwing exception
-            FileAttributes attr = File.GetAttributes(@"C:\Temp");
-            foreach (string item in itemsToDelete)
+            try
             {
+               FileAttributes attr = File.GetAttributes(item);
                if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
                {
                   Debug.WriteLine("Directories to Delete: " + item);
@@ -219,25 +223,30 @@ namespace FileOrganizer
                else
                {
                   FileSystem.DeleteFile(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                  var dir = Path.GetDirectoryName(item);
+                  if (dir != XML.location && TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() == 0)
+                  {
+                     FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                  }
                }
             }
+            catch (IOException ex)
+            {
+               Debug.WriteLine(ex);
+            }
          }
-         catch (IOException ex)
-         {
-            Debug.WriteLine(ex);
-         }
+         DeleteLine(itemsToDelete);
       }
 
       private void AddFileToDelete(string file)
       {
          using (StreamWriter f = File.AppendText(filesToDelete))
-         { 
+         {
             var dir = Path.GetDirectoryName(file);
-            if (dir == XML.location || TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() > 1)
-               f.Write(file + Environment.NewLine);
-            else
+            if (dir != XML.location && TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() == 0)
                f.Write(dir + Environment.NewLine);
-
+            else
+               f.Write(file + Environment.NewLine);
          }
       }
       #endregion
@@ -541,13 +550,13 @@ namespace FileOrganizer
          try
          {
             // TODO: Look @ http://stackoverflow.com/questions/1572468/filesystemwatcher-does-not-work-properly-when-many-files-are-added-to-the-direct
-                  // to fix removing or adding multiple files at the same time
+            // to fix removing or adding multiple files at the same time
             wLoc.EnableRaisingEvents = false;
             wTV.EnableRaisingEvents = false;
             wMov.EnableRaisingEvents = false;
 
             this.Dispatcher.Invoke(() => {
-               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) || 
+               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
                   e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
                {
                   TreeViewModel.tvshows = new List<string>();

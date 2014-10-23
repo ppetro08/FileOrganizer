@@ -30,7 +30,7 @@ namespace FileOrganizer
          FileInfo fi = new FileInfo(f);
          long fileSize = fi.Length / (1024 * 1024); // converts file size from bytes to mbs
 
-         if (Array.IndexOf(extensions, Path.GetExtension(f)) > -1 && fileSize > 50)
+         if (Array.IndexOf(extensions, Path.GetExtension(f)) > -1 && fileSize > 150)
          {
             return true;
          }
