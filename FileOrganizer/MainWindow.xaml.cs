@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.VisualBasic.FileIO;
 using CustomExtensions;
+using System.Timers;
 
 namespace FileOrganizer
 {
@@ -22,6 +23,9 @@ namespace FileOrganizer
       FileSystemWatcher wLoc;
       FileSystemWatcher wTV;
       FileSystemWatcher wMov;
+      Timer notificationTimer;
+      List<RenamedEventArgs> renamedFiles = new List<RenamedEventArgs>();
+      List<FileSystemEventArgs> changedFiles = new List<FileSystemEventArgs>();
       private long originalSize;
       private double toMove = 0;
       private double moved = 0;
@@ -57,44 +61,6 @@ namespace FileOrganizer
             createLocationWindow();
 
          initWatchers();
-      }
-
-      // Initializes and turns on filewatcher for each directory
-      private void initWatchers()
-      {
-         // Initializes file watchers
-         wLoc = new FileSystemWatcher();
-         wTV = new FileSystemWatcher();
-         wMov = new FileSystemWatcher();
-
-         // Sets path for each file watcher
-         wLoc.Path = XML.location;
-         wTV.Path = XML.destTV;
-         wMov.Path = XML.destMovies;
-
-         // Sets each to watch subdirectories
-         wLoc.IncludeSubdirectories = true;
-         wTV.IncludeSubdirectories = true;
-         wMov.IncludeSubdirectories = true;
-
-         // Adds event handlers for each directory storing videos
-         wLoc.Created += new FileSystemEventHandler(OnChanged);
-         wLoc.Changed += new FileSystemEventHandler(OnChanged);
-         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
-         wLoc.Renamed += new RenamedEventHandler(OnRenamed);
-
-         wTV.Changed += new FileSystemEventHandler(OnChanged);
-         wTV.Deleted += new FileSystemEventHandler(OnChanged);
-         wTV.Renamed += new RenamedEventHandler(OnRenamed);
-
-         wMov.Changed += new FileSystemEventHandler(OnChanged);
-         wMov.Deleted += new FileSystemEventHandler(OnChanged);
-         wMov.Renamed += new RenamedEventHandler(OnRenamed);
-
-         // Begins watching
-         wLoc.EnableRaisingEvents = true;
-         wTV.EnableRaisingEvents = true;
-         wMov.EnableRaisingEvents = true;
       }
 
       #region Location Window
@@ -510,16 +476,70 @@ namespace FileOrganizer
          }
       }
 
-      #region OnChange Methods
-      // When files are renamed in folders update tree
-      private void OnRenamed(object sender, RenamedEventArgs e)
+      #region FileSystemWatcher Methods
+      // Initializes and turns on filewatcher for each directory
+      private void initWatchers()
       {
-         try
-         {
-            wLoc.EnableRaisingEvents = false;
-            wTV.EnableRaisingEvents = false;
-            wMov.EnableRaisingEvents = false;
+         // Initializes file watchers
+         wLoc = new FileSystemWatcher();
+         wTV = new FileSystemWatcher();
+         wMov = new FileSystemWatcher();
 
+         // Sets path for each file watcher
+         wLoc.Path = XML.location;
+         wTV.Path = XML.destTV;
+         wMov.Path = XML.destMovies;
+
+         // Sets each to watch subdirectories
+         wLoc.IncludeSubdirectories = true;
+         wTV.IncludeSubdirectories = true;
+         wMov.IncludeSubdirectories = true;
+
+         // Adds event handlers for each directory storing videos
+         wLoc.Created += new FileSystemEventHandler(OnChanged);
+         wLoc.Changed += new FileSystemEventHandler(OnChanged);
+         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
+         wLoc.Renamed += new RenamedEventHandler(OnRenamed);
+
+         wTV.Changed += new FileSystemEventHandler(OnChanged);
+         wTV.Deleted += new FileSystemEventHandler(OnChanged);
+         wTV.Renamed += new RenamedEventHandler(OnRenamed);
+
+         wMov.Changed += new FileSystemEventHandler(OnChanged);
+         wMov.Deleted += new FileSystemEventHandler(OnChanged);
+         wMov.Renamed += new RenamedEventHandler(OnRenamed);
+
+         // Begins watching
+         wLoc.EnableRaisingEvents = true;
+         wTV.EnableRaisingEvents = true;
+         wMov.EnableRaisingEvents = true;
+
+         // Initialize notification timer
+         notificationTimer = new Timer();
+         notificationTimer.Elapsed += notificationTimer_Elapsed;
+         notificationTimer.Interval = 250;
+      }
+
+      private void notificationTimer_Elapsed(object sender, ElapsedEventArgs e)
+      {
+         if (renamedFiles != null)
+            onRenamed();
+         if (changedFiles != null)
+            onChanged();
+
+         // Stop the timer and wait for the next batch of files.  
+         notificationTimer.Stop();
+
+         // Clear your file lists
+         renamedFiles = new List<RenamedEventArgs>();
+         changedFiles = new List<FileSystemEventArgs>();
+      }
+
+      private void onRenamed()
+      {
+
+         foreach (var e in renamedFiles)
+         {
             this.Dispatcher.Invoke(() => {
                if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
                   e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
@@ -536,25 +556,12 @@ namespace FileOrganizer
                Videos.Items.Refresh();
             });
          }
-         finally
-         {
-            wLoc.EnableRaisingEvents = true;
-            wTV.EnableRaisingEvents = true;
-            wMov.EnableRaisingEvents = true;
-         }
       }
 
-      // When files are added in folders update tree
-      private void OnChanged(object sender, FileSystemEventArgs e)
+      private void onChanged()
       {
-         try
+         foreach (var e in changedFiles)
          {
-            // TODO: Look @ http://stackoverflow.com/questions/1572468/filesystemwatcher-does-not-work-properly-when-many-files-are-added-to-the-direct
-            // to fix removing or adding multiple files at the same time
-            wLoc.EnableRaisingEvents = false;
-            wTV.EnableRaisingEvents = false;
-            wMov.EnableRaisingEvents = false;
-
             this.Dispatcher.Invoke(() => {
                if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
                   e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
@@ -574,6 +581,44 @@ namespace FileOrganizer
                }
                Videos.Items.Refresh();
             });
+         }
+      }
+
+      // When files are renamed in folders update tree
+      private void OnRenamed(object sender, RenamedEventArgs e)
+      {
+         try
+         {
+            wLoc.EnableRaisingEvents = false;
+            wTV.EnableRaisingEvents = false;
+            wMov.EnableRaisingEvents = false;
+            renamedFiles.Add(e);
+
+            // 'Reset' timer
+            notificationTimer.Stop();
+            notificationTimer.Start();
+         }
+         finally
+         {
+            wLoc.EnableRaisingEvents = true;
+            wTV.EnableRaisingEvents = true;
+            wMov.EnableRaisingEvents = true;
+         }
+      }
+
+      // When files are added in folders update tree
+      private void OnChanged(object sender, FileSystemEventArgs e)
+      {
+         try
+         {
+            wLoc.EnableRaisingEvents = false;
+            wTV.EnableRaisingEvents = false;
+            wMov.EnableRaisingEvents = false;
+            changedFiles.Add(e);
+
+            // 'Reset' timer
+            notificationTimer.Stop();
+            notificationTimer.Start();
          }
          finally
          {
