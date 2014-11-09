@@ -187,7 +187,7 @@ namespace FileOrganizer
 
                if (tvTree.Children.First(c => c.Name == checkTree(season).Name).Children.Count() == 0)
                   tvTree.Children.Remove(checkTree(season));
-               
+
                checkTree(newSeason).Children.Add(new TreeViewModel(ns.file, newFullPath));
             }
             else

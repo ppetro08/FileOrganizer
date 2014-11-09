@@ -20,6 +20,15 @@ namespace FileOrganizer
    /// </summary>
    public partial class MainWindow : Window
    {
+      // TODO: Change to look at 3 digit numbers for shows and then also to see if there are multiple or a directory already created
+      // TODO: Check for s#e# or any variation of that with regex
+      // TODO: Fix file watcher issues
+      // TODO: Sorting after file watcher updates list
+      // TODO: Delete the file and then the node individually when doing clean
+      // TODO: If above solution does not work then reset the whole tree
+      // TODO: Add refresh button
+
+
       FileSystemWatcher wLoc;
       FileSystemWatcher wTV;
       FileSystemWatcher wMov;
@@ -88,7 +97,15 @@ namespace FileOrganizer
          Locations l = new Locations();
          l.Owner = this;
          l.ShowDialog();
+
          Videos.ItemsSource = TreeViewModel.setTree();
+
+         TreeViewModel.tvshows = new List<string>();
+         TreeViewModel.movies = new List<string>();
+         TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+         TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
+
+         Videos.Items.Refresh();
       }
       #endregion
 
@@ -202,6 +219,9 @@ namespace FileOrganizer
             }
          }
          DeleteLine(itemsToDelete);
+         this.Dispatcher.Invoke(() => {
+            Videos.ItemsSource = TreeViewModel.setTree();
+         });
       }
 
       private void AddFileToDelete(string file)
@@ -537,50 +557,55 @@ namespace FileOrganizer
 
       private void onRenamed()
       {
-
-         foreach (var e in renamedFiles)
+         if (renamedFiles != null)
          {
-            this.Dispatcher.Invoke(() => {
-               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
-                  e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  TreeViewModel.tvshows = new List<string>();
-                  TreeViewModel.movies = new List<string>();
-                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
-                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
-               }
-               else
-               {
-                  TreeViewModel.RenameItem(e.OldFullPath, e.FullPath);
-               }
-               Videos.Items.Refresh();
-            });
+            foreach (var e in renamedFiles)
+            {
+               this.Dispatcher.Invoke(() => {
+                  if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
+                     e.FullPath.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
+                  {
+                     TreeViewModel.tvshows = new List<string>();
+                     TreeViewModel.movies = new List<string>();
+                     TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+                     TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
+                  }
+                  else
+                  {
+                     TreeViewModel.RenameItem(e.OldFullPath, e.FullPath);
+                  }
+                  Videos.Items.Refresh();
+               });
+            }
          }
       }
 
       private void onChanged()
       {
-         foreach (var e in changedFiles)
+         if (changedFiles != null)
          {
-            this.Dispatcher.Invoke(() => {
-               if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
-                  e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase))
-               {
-                  TreeViewModel.tvshows = new List<string>();
-                  TreeViewModel.movies = new List<string>();
-                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
-                  TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
-               }
-               else if (e.ChangeType == WatcherChangeTypes.Created)
-               {
-                  TreeViewModel.AddItem(e.FullPath);
-               }
-               else if (e.ChangeType == WatcherChangeTypes.Deleted)
-               {
-                  TreeViewModel.DeleteItem(e.FullPath);
-               }
-               Videos.Items.Refresh();
-            });
+            foreach (var e in changedFiles)
+            {
+               this.Dispatcher.Invoke(() => {
+                  if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase) ||
+                     e.FullPath.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
+                  {
+                     TreeViewModel.tvshows = new List<string>();
+                     TreeViewModel.movies = new List<string>();
+                     TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
+                     TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
+                  }
+                  else if (e.ChangeType == WatcherChangeTypes.Created)
+                  {
+                     TreeViewModel.AddItem(e.FullPath);
+                  }
+                  else if (e.ChangeType == WatcherChangeTypes.Deleted)
+                  {
+                     TreeViewModel.DeleteItem(e.FullPath);
+                  }
+                  Videos.Items.Refresh();
+               });
+            }
          }
       }
 
