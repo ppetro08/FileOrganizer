@@ -48,7 +48,7 @@ namespace FileOrganizer
          // Finds where the end of the tv name is based on common torrent names
          for (int i = 0; i < splittv.Length; i++)
          {
-            Match match = Regex.Match(splittv[i], @"s([0-9]{1,2}[0-9]{1,2})", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(splittv[i], @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
             if (match.Success)
             {
                mark = i + 1;
@@ -102,6 +102,7 @@ namespace FileOrganizer
             file = file + part;
       }
 
+      //TODO: Fix the match for season
       // Gets tv show season #
       private void getTVSeason(char[] splitseason, bool match2 = false)
       {

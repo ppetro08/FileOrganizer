@@ -106,7 +106,7 @@ namespace FileOrganizer
          {
             for (int i = 0; i < nameSplit.Length; i++)
             {
-               Match match = Regex.Match(nameSplit[i], @"s([0-9].*$)", RegexOptions.IgnoreCase);
+               Match match = Regex.Match(nameSplit[i], @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
                if (match.Success)
                {
                   if (tvshows.Any(s => s.Contains(vidStart, StringComparison.InvariantCultureIgnoreCase) && s.Contains(nameSplit[i], StringComparison.InvariantCultureIgnoreCase)))

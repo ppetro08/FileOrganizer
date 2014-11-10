@@ -13,7 +13,7 @@ namespace FileOrganizer
       // Checks if movie or tv show
       public static bool isMovie(string fullpath)
       {
-         Match match = Regex.Match(Path.GetFileName(fullpath), @"s([0-9].*$)", RegexOptions.IgnoreCase);
+         Match match = Regex.Match(Path.GetFileName(fullpath), @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
          if (match.Success || fullpath.Contains("season", StringComparison.InvariantCultureIgnoreCase))
          {
             return false;
