@@ -23,13 +23,10 @@ namespace FileOrganizer
       FileSystemWatcher wLoc;
       FileSystemWatcher wTV;
       FileSystemWatcher wMov;
-      List<RenamedEventArgs> renamedFiles = new List<RenamedEventArgs>();
-      List<FileSystemEventArgs> changedFiles = new List<FileSystemEventArgs>();
       private long originalSize;
       private double toMove = 0;
       private double moved = 0;
       private List<Locs> locs;
-      private string filesToDelete = "FilesToDelete.txt";
       BackgroundWorker backgroundWorker1 = new BackgroundWorker();
 
       struct Locs
@@ -179,12 +176,7 @@ namespace FileOrganizer
             return new List<string>();
          }
       }
-
-      private void DeleteLine(List<string> lines)
-      {
-         File.WriteAllLines(filesToDelete, File.ReadLines(filesToDelete).Where(l => !lines.Contains(l)).ToList());
-      }
-
+      
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
       {
@@ -232,14 +224,6 @@ namespace FileOrganizer
          catch (IOException ex)
          {
             Debug.WriteLine(ex);
-         }
-      }
-
-      private void AddFileToDelete(Locs file)
-      {
-         using (StreamWriter f = File.AppendText(filesToDelete))
-         {
-            f.Write(file + Environment.NewLine);
          }
       }
       #endregion
@@ -364,7 +348,6 @@ namespace FileOrganizer
                   try
                   {
                      CopyFile(l.cur, l.dest);
-                     AddFileToDelete(l);
                   }
                   catch (Exception ex)
                   {
@@ -378,7 +361,7 @@ namespace FileOrganizer
                      txtProgress.Text = l.name;
                   });
                   CopyFile(l.cur, l.dest);
-                  FileSystem.DeleteFile(l.cur, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                  DeleteFilesOrDirectories(l.cur);
                }
             }
          }
