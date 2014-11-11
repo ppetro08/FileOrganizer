@@ -13,7 +13,7 @@ namespace FileOrganizer
    {
       public string Name { get; set; }
       public string FullPath { get; private set; }
-      public ObservableCollection<TreeViewModel> Children { get; private set; }
+      public List<TreeViewModel> Children { get; private set; }
       public static TreeViewModel movieTree;
       public static TreeViewModel tvTree;
       public static List<string> movies = new List<string>();
@@ -26,14 +26,14 @@ namespace FileOrganizer
       public TreeViewModel(string name)
       {
          Name = name;
-         Children = new ObservableCollection<TreeViewModel>();
+         Children = new List<TreeViewModel>();
       }
 
       public TreeViewModel(string name, string fullPath)
       {
          Name = name;
          FullPath = fullPath;
-         Children = new ObservableCollection<TreeViewModel>();
+         Children = new List<TreeViewModel>();
       }
       #endregion
 
@@ -276,9 +276,20 @@ namespace FileOrganizer
          return season;
       }
 
-      private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
+      // Sorts the tree by parent name and then childrens names
+      private static List<TreeViewModel> sortTree(List<TreeViewModel> tree)
       {
-         tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));
+         // Sorts movies
+         tree.ForEach(x => {
+            x.Children = x.Children.OrderBy(g => g.Name).ToList();
+         });
+
+         // Sorts shows
+         tree.ForEach(x => {
+            x.Children.OrderBy(g => g.Name).ToList().ForEach(y => {
+               y.Children = y.Children.OrderBy(h => h.Name).ToList();
+            });
+         });
 
          return tree;
       }
@@ -286,9 +297,9 @@ namespace FileOrganizer
 
       #region Create Tree
       // Returns tree with TV Shows and Movies
-      public static ObservableCollection<TreeViewModel> setTree()
+      public static List<TreeViewModel> setTree()
       {
-         ObservableCollection<TreeViewModel> treeView = new ObservableCollection<TreeViewModel>();
+         List<TreeViewModel> treeView = new List<TreeViewModel>();
          movieTree = new TreeViewModel("Movies");
          tvTree = new TreeViewModel("TV Shows");
 
