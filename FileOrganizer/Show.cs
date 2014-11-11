@@ -52,11 +52,10 @@ namespace FileOrganizer
             if (match.Success)
             {
                mark = i + 1;
-               char[] splitseason = splittv[i].ToCharArray();
 
-               getTVSeason(splitseason);
+               splittv[i] = getSeasonName(splittv[i]).ToUpper();
+               getSeasonNumber(splittv[i]);
 
-               splittv[i] = splittv[i].ToUpper();
                break;
             }
             else
@@ -102,19 +101,13 @@ namespace FileOrganizer
             file = file + part;
       }
 
-      //TODO: Fix the match for season
       // Gets tv show season #
-      private void getTVSeason(char[] splitseason, bool match2 = false)
+      private void getSeasonNumber(string splitseason)
       {
          for (int i = 0; i < splitseason.Length; i++)
          {
             if (char.IsNumber(splitseason[i]))
             {
-               if (match2 == true)
-               {
-                  season = splitseason[0].ToString();
-                  return;
-               }
                if (Convert.ToInt32(splitseason[i].ToString()) == 0)
                {
                   season = splitseason[i + 1].ToString();
@@ -122,11 +115,41 @@ namespace FileOrganizer
                }
                else
                {
-                  season = splitseason[i].ToString() + splitseason[i + 1].ToString();
+                  if (splitseason.Length < 4)
+                     season = splitseason[i].ToString();
+                  else
+                     season = splitseason[i].ToString() + splitseason[i + 1].ToString();
                   return;
                }
             }
          }
+      }
+
+      // Gets tv show season #
+      private string getSeasonName(string splitseason)
+      {
+         //(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})
+         if (Regex.Match(splitseason, @"^s\d{2}e\d{2}$").Success)
+            return splitseason;
+
+         if (splitseason.Length <= 6)
+         {
+            if (char.ToLower(splitseason[0]) != 's')
+            {
+               if (splitseason[0] != 0 && (char.ToLower(splitseason[1]) == 'e' || splitseason.Length < 4))
+                  splitseason = "0" + splitseason;
+
+               splitseason = "s" + splitseason;
+            }
+            if (splitseason[1] != '0' && splitseason[2] == 'e')
+               splitseason = splitseason[0] + "0" + splitseason.Substring(1);
+            if (char.ToLower(splitseason[3]) != 'e')
+               splitseason = splitseason.Replace(splitseason[3].ToString(), "e");
+            if (splitseason[4] != 0 && splitseason.Length < 6)
+               splitseason = splitseason.Substring(0, 4) + "0" + splitseason[splitseason.Length - 1];
+
+         }
+         return splitseason;
       }
    }
 }

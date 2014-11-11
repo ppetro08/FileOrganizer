@@ -4,7 +4,7 @@
         Title="Video Mover" Loaded="Window_Loaded"
         WindowStartupLocation="CenterScreen"
         MinWidth="280" SizeToContent="WidthAndHeight"
-        MinHeight="300" MaxHeight="800">
+        MinHeight="300" MaxHeight="700">
    <Window.Resources>
       <ResourceDictionary>
          <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem">

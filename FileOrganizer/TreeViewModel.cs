@@ -276,7 +276,6 @@ namespace FileOrganizer
          return season;
       }
 
-      // Sorts the tree by parent name and then childrens names
       private static ObservableCollection<TreeViewModel> sortTree(ObservableCollection<TreeViewModel> tree)
       {
          tree = new ObservableCollection<TreeViewModel>(tree.OrderBy(i => i.Name));

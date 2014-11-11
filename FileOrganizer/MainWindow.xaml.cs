@@ -20,10 +20,8 @@ namespace FileOrganizer
    /// </summary>
    public partial class MainWindow : Window
    {
-      // TODO: Change to look at 3 digit numbers for shows and then also to see if there are multiple or a directory already created
-      // TODO: Check for s#e# or any variation of that with regex
       // TODO: Fix file watcher issues
-      // TODO: Sorting after file watcher updates list
+      // TODO: Fix sorting
       // TODO: Delete the file and then the node individually when doing clean
       // TODO: If above solution does not work then reset the whole tree
       // TODO: Add refresh button
@@ -197,42 +195,31 @@ namespace FileOrganizer
          {
             try
             {
-               FileAttributes attr = File.GetAttributes(item);
-               if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
-               {
-                  Debug.WriteLine("Directories to Delete: " + item);
-                  FileSystem.DeleteDirectory(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-               }
-               else
-               {
-                  FileSystem.DeleteFile(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                  var dir = Path.GetDirectoryName(item);
-                  if (dir != XML.location && TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() == 0)
-                  {
-                     FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                  }
-               }
+               //TODO: Delete files to delete and then folder at the end
+               var dir = Path.GetDirectoryName(item);
+               if (!Directory.EnumerateFileSystemEntries(dir).Any(f => StringManipulations.isVideo(f)))
+                  FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+
+               FileSystem.DeleteFile(item, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
             }
             catch (IOException ex)
             {
                Debug.WriteLine(ex);
             }
          }
+
          DeleteLine(itemsToDelete);
+
          this.Dispatcher.Invoke(() => {
             Videos.ItemsSource = TreeViewModel.setTree();
          });
       }
 
-      private void AddFileToDelete(string file)
+      private void AddFileToDelete(Locs file)
       {
          using (StreamWriter f = File.AppendText(filesToDelete))
          {
-            var dir = Path.GetDirectoryName(file);
-            if (dir != XML.location && TreeViewModel.DirSearch(dir).Where(v => StringManipulations.isVideo(v)).Count() == 0)
-               f.Write(dir + Environment.NewLine);
-            else
-               f.Write(file + Environment.NewLine);
+            f.Write(file + Environment.NewLine);
          }
       }
       #endregion
@@ -356,7 +343,7 @@ namespace FileOrganizer
                   try
                   {
                      CopyFile(l.cur, l.dest);
-                     AddFileToDelete(l.cur);
+                     AddFileToDelete(l);
                   }
                   catch (Exception ex)
                   {
