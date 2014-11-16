@@ -317,6 +317,7 @@ namespace FileOrganizer
          }
          else
             treeView.Remove(tvTree);
+
          if (movieTree.Children.Count > 0)
          {
             movieTree.Initialize();

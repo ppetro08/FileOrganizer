@@ -15,6 +15,10 @@ using System.Timers;
 
 namespace FileOrganizer
 {
+
+   //TODO: Look into why locations doesn't work with a flashdrive
+
+
    /// <summary>
    /// Interaction logic for MainWindow.xaml
    /// </summary>
@@ -63,15 +67,15 @@ namespace FileOrganizer
       // Returns true if file directories exist
       private bool checkLocations()
       {
-         if (!Directory.Exists(XML.location))
+         if (!Directory.Exists(XML.location) || Directory.GetParent(XML.location) == null)
          {
             return false;
          }
-         if (!Directory.Exists(XML.destTV))
+         if (!Directory.Exists(XML.destTV) || Directory.GetParent(XML.destTV) == null)
          {
             return false;
          }
-         if (!Directory.Exists(XML.destMovies))
+         if (!Directory.Exists(XML.destMovies) || Directory.GetParent(XML.destMovies) == null)
          {
             return false;
          }
@@ -223,7 +227,7 @@ namespace FileOrganizer
          }
          catch (IOException ex)
          {
-            Debug.WriteLine(ex);
+            LogFile lo = new LogFile(ex.ToString());
          }
       }
       #endregion
@@ -351,7 +355,6 @@ namespace FileOrganizer
                   }
                   catch (Exception ex)
                   {
-                     Debug.WriteLine(ex);
                      LogFile lo = new LogFile(ex.ToString());
                   }
                }
@@ -367,13 +370,11 @@ namespace FileOrganizer
          }
          catch (InvalidOperationException ex)
          {
-            Debug.WriteLine(ex);
             // Message to tell them the video is open in another program and to close it
             LogFile lo = new LogFile(ex.ToString());
          }
          catch (Exception ex)
          {
-            Debug.WriteLine(ex);
             LogFile lo = new LogFile(ex.ToString());
          }
       }

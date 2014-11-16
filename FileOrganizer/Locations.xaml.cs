@@ -10,7 +10,7 @@ namespace FileOrganizer
    /// </summary>
    public partial class Locations : Window
    {
-      private bool _validation = true;
+      private bool _validation = false;
 
       public Locations()
       {
@@ -31,28 +31,18 @@ namespace FileOrganizer
       // Validation for textboxes
       #region TextBox Validation
       // Check if all checkboxes are validated
-      private void validation() {
-         if (txtLocation.Text.Trim().Length != 0)
+      private bool validation(string directory)
+      {
+         if (directory.Length != 0)
          {
-            if (Directory.Exists(txtLocation.Text.Trim()))
+            if (Directory.Exists(directory) && Directory.GetParent(directory) != null)
+            {
                _validation = true;
-            else
-               _validation = false;
+               return true;
+            }
          }
-         if (txtMovies.Text.Trim().Length != 0)
-         {
-            if (Directory.Exists(txtMovies.Text.Trim()))
-               _validation = true;
-            else
-               _validation = false;
-         }
-         if (txtShows.Text.Trim().Length != 0)
-         {
-            if (Directory.Exists(txtShows.Text.Trim()))
-               _validation = true;
-            else
-               _validation = false;
-         }
+         _validation = false;
+         return false;
       }
 
       // Validates individual textboxes
@@ -92,28 +82,15 @@ namespace FileOrganizer
       //}
 
       // Lost focus handler for locations
+
       private void locLost(object sender, RoutedEventArgs e)
       {
-         _validation = true;
-         if (txtLocation.Text.Trim().Length != 0)
+         if (validation(txtLocation.Text.Trim()))
          {
-            if (Directory.Exists(txtLocation.Text.Trim()))
-            {
-               txtLocation.MouseEnter -= locTool; // Removes handler
-               txtLocation.ToolTip = null; // Removes tooltip
-               txtLocation.ClearValue(BackgroundProperty); // Resets background property to default
-               txtLocation.ClearValue(BorderBrushProperty); // Resets border property to default
-            }
-            else
-            {
-               txtLocation.BorderBrush = Brushes.Red;
-               txtLocation.BorderThickness = new Thickness(1);
-               Color c = Colors.Red;
-               c.A = 20;
-               txtLocation.Background = new SolidColorBrush(c);
-               txtLocation.MouseEnter += locTool;
-               _validation = false;
-            }
+            txtLocation.MouseEnter -= locTool; // Removes handler
+            txtLocation.ToolTip = null; // Removes tooltip
+            txtLocation.ClearValue(BackgroundProperty); // Resets background property to default
+            txtLocation.ClearValue(BorderBrushProperty); // Resets border property to default
          }
          else
          {
@@ -123,32 +100,18 @@ namespace FileOrganizer
             c.A = 20;
             txtLocation.Background = new SolidColorBrush(c);
             txtLocation.MouseEnter += locTool;
-            _validation = false;
          }
       }
       // Lost focus handler for movies
       private void moviesLost(object sender, RoutedEventArgs e)
       {
-         _validation = true;
-         if (txtMovies.Text.Trim().Length != 0)
+         if (validation(txtMovies.Text.Trim()))
          {
-            if (Directory.Exists(txtMovies.Text.Trim()))
-            {
-               txtMovies.MouseEnter -= movieTool; // Removes handler
-               txtMovies.ToolTip = null; // Removes tooltip
-               txtMovies.ClearValue(BackgroundProperty); // Resets background property to default
-               txtMovies.ClearValue(BorderBrushProperty); // Resets border property to default
-            }
-            else
-            {
-               txtMovies.BorderBrush = Brushes.Red;
-               txtMovies.BorderThickness = new Thickness(1);
-               Color c = Colors.Red;
-               c.A = 20;
-               txtMovies.Background = new SolidColorBrush(c);
-               txtMovies.MouseEnter += movieTool;
-               _validation = false;
-            }
+            txtMovies.MouseEnter -= movieTool; // Removes handler
+            txtMovies.ToolTip = null; // Removes tooltip
+            txtMovies.ClearValue(BackgroundProperty); // Resets background property to default
+            txtMovies.ClearValue(BorderBrushProperty); // Resets border property to default
+
          }
          else
          {
@@ -158,32 +121,17 @@ namespace FileOrganizer
             c.A = 20;
             txtMovies.Background = new SolidColorBrush(c);
             txtMovies.MouseEnter += movieTool;
-            _validation = false;
          }
       }
       // Lost focus handler for shows
       private void showsLost(object sender, RoutedEventArgs e)
       {
-         _validation = true;
-         if (txtShows.Text.Trim().Length != 0)
+         if (validation(txtShows.Text.Trim()))
          {
-            if (Directory.Exists(txtShows.Text.Trim()))
-            {
-               txtShows.MouseEnter -= showTool; // Removes handler
-               txtShows.ToolTip = null; // Removes tooltip
-               txtShows.ClearValue(BackgroundProperty); // Resets background property to default
-               txtShows.ClearValue(BorderBrushProperty); // Resets border property to default
-            }
-            else
-            {
-               txtShows.BorderBrush = Brushes.Red;
-               txtShows.BorderThickness = new Thickness(1);
-               Color c = Colors.Red;
-               c.A = 20;
-               txtShows.Background = new SolidColorBrush(c);
-               txtShows.MouseEnter += showTool;
-               _validation = false;
-            }
+            txtShows.MouseEnter -= showTool; // Removes handler
+            txtShows.ToolTip = null; // Removes tooltip
+            txtShows.ClearValue(BackgroundProperty); // Resets background property to default
+            txtShows.ClearValue(BorderBrushProperty); // Resets border property to default
          }
          else
          {
@@ -193,7 +141,6 @@ namespace FileOrganizer
             c.A = 20;
             txtShows.Background = new SolidColorBrush(c);
             txtShows.MouseEnter += showTool;
-            _validation = false;
          }
       }
       // Tool tip handler for location

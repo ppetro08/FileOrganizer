@@ -49,8 +49,8 @@ namespace FileOrganizer
          }
          catch (IndexOutOfRangeException ex)
          {
-            Debug.WriteLine(ex);
-            return "";
+            LogFile lo = new LogFile(ex.ToString());
+            return string.Empty;
          }
       }
 
@@ -71,8 +71,8 @@ namespace FileOrganizer
          }
          catch (IndexOutOfRangeException ex)
          {
-            LogFile l = new LogFile(ex.ToString());
-            return "";
+            LogFile lo = new LogFile(ex.ToString());
+            return string.Empty;
          }
       }
    }
