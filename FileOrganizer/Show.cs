@@ -91,22 +91,21 @@ namespace FileOrganizer
          if (Regex.Match(splitseason, @"(s\d{1,2}e\d{1,2})|(s\d{2,4})").Success)
             return splitseason;
 
-         if (splitseason.Length <= 6)
-         {
-            if (char.ToLower(splitseason[0]) != 's')
-            {
-               if (splitseason[0] != 0 && (char.ToLower(splitseason[1]) == 'e' || splitseason.Length < 4))
-                  splitseason = "0" + splitseason;
+         if (splitseason.Length > 6) return splitseason;
 
-               splitseason = "s" + splitseason;
-            }
-            if (splitseason[1] != '0' && splitseason[2] == 'e')
-               splitseason = splitseason[0] + "0" + splitseason.Substring(1);
-            if (char.ToLower(splitseason[3]) != 'e')
-               splitseason = splitseason.Replace(splitseason[3].ToString(), "e");
-            if (splitseason[4] != 0 && splitseason.Length < 6)
-               splitseason = splitseason.Substring(0, 4) + "0" + splitseason[splitseason.Length - 1];
+         if (char.ToLower(splitseason[0]) != 's')
+         {
+            if (splitseason[0] != 0 && (char.ToLower(splitseason[1]) == 'e' || splitseason.Length < 4))
+               splitseason = "0" + splitseason;
+
+            splitseason = "s" + splitseason;
          }
+         if (splitseason[1] != '0' && splitseason[2] == 'e')
+            splitseason = splitseason[0] + "0" + splitseason.Substring(1);
+         if (char.ToLower(splitseason[3]) != 'e')
+            splitseason = splitseason.Replace(splitseason[3].ToString(), "e");
+         if (splitseason[4] != 0 && splitseason.Length < 6)
+            splitseason = splitseason.Substring(0, 4) + "0" + splitseason[splitseason.Length - 1];
          return splitseason;
       }
    }

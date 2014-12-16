@@ -157,20 +157,20 @@ namespace FileOrganizer
       }
 
       #region Clean Directory
-      private List<string> ReadFile(string filesToDelete)
-      {
-         if (!File.Exists(filesToDelete)) return new List<string>();
+      //private List<string> ReadFile(string filesToDelete)
+      //{
+      //   if (!File.Exists(filesToDelete)) return new List<string>();
 
-         var allLines = new List<string>();
-         using (var sr = File.OpenText(filesToDelete))
-         {
-            while (!sr.EndOfStream)
-            {
-               allLines.Add(sr.ReadLine());
-            }
-         }
-         return allLines;
-      }
+      //   var allLines = new List<string>();
+      //   using (var sr = File.OpenText(filesToDelete))
+      //   {
+      //      while (!sr.EndOfStream)
+      //      {
+      //         allLines.Add(sr.ReadLine());
+      //      }
+      //   }
+      //   return allLines;
+      //}
       
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
@@ -193,11 +193,7 @@ namespace FileOrganizer
             }
          }
 
-         Dispatcher.Invoke(() => {
-            var checkedNames = GetChecked();
-            Videos.ItemsSource = TreeViewModel.SetTree();
-            CheckPreviouslyChecked(checkedNames);
-         });
+         ResetTree();
       }
 
       private static void DeleteFilesOrDirectories(string filePath)
@@ -425,7 +421,9 @@ namespace FileOrganizer
       private void ResetTree()
       {
          Dispatcher.Invoke(() => {
+            var checkedNames = GetChecked();
             Videos.ItemsSource = TreeViewModel.SetTree();
+            CheckPreviouslyChecked(checkedNames);
          });
       }
 
