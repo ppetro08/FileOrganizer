@@ -34,11 +34,11 @@
             ItemContainerStyle="{StaticResource TreeViewItemStyle}"
             ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1">
       </TreeView>
-      <Button x:Name="btnCopy" Content="Copy" Width="60" Height="20" FontSize="11" Click="Copy_Click" 
+      <Button x:Name="BtnCopy" Content="Copy" Width="60" Height="20" FontSize="11" Click="Copy_Click" 
                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,80,22.5"/>
-      <Button x:Name="btnMove" Content="Move" Width="60" Height="20" FontSize="11" Click="Move_Click" 
+      <Button x:Name="BtnMove" Content="Move" Width="60" Height="20" FontSize="11" Click="Move_Click" 
                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,10,22.5"/>
-      <ProgressBar x:Name="progressBar1" Height="20" VerticalAlignment="Bottom"/>
-      <TextBlock x:Name="txtProgress" Height="20" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+      <ProgressBar x:Name="ProgressBar1" Height="20" VerticalAlignment="Bottom"/>
+      <TextBlock x:Name="TxtProgress" Height="20" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
    </Grid>
 </Window>

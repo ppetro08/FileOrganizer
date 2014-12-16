@@ -1,81 +1,79 @@
-﻿using System.IO;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Diagnostics;
-using System.ComponentModel;
-using Microsoft.VisualBasic.FileIO;
 using CustomExtensions;
-using System.Timers;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
+using FileSystem = Microsoft.VisualBasic.FileIO.FileSystem;
 
 namespace FileOrganizer
 {
 
-   //TODO: Look into why locations doesn't work with a flashdrive
+   //TODO: Fix clean
+   //TODO: Recheck after setting tree
 
 
    /// <summary>
    /// Interaction logic for MainWindow.xaml
    /// </summary>
-   public partial class MainWindow : Window
+   public partial class MainWindow
    {
-      FileSystemWatcher wLoc;
-      FileSystemWatcher wTV;
-      FileSystemWatcher wMov;
-      private long originalSize;
-      private double toMove = 0;
-      private double moved = 0;
-      private List<Locs> locs;
-      BackgroundWorker backgroundWorker1 = new BackgroundWorker();
+      FileSystemWatcher _wLoc;
+      FileSystemWatcher _wTv;
+      FileSystemWatcher _wMov;
+      private double _toMove;
+      private double _moved;
+      private List<Locs> _locs;
+      readonly BackgroundWorker _backgroundWorker1 = new BackgroundWorker();
 
       struct Locs
       {
-         public string cur;
-         public string dest;
-         public string name;
+         public string Cur;
+         public string Dest;
+         public string Name;
       };
 
       public MainWindow()
       {
          InitializeComponent();
 
-         backgroundWorker1.WorkerReportsProgress = true;
-         backgroundWorker1.DoWork += new DoWorkEventHandler(backgroundWorker1_DoWork);
-         backgroundWorker1.ProgressChanged += new ProgressChangedEventHandler(backgroundWorker1_ProgressChanged);
-         backgroundWorker1.RunWorkerCompleted += new RunWorkerCompletedEventHandler(backgroundWorker1_RunWorkerCompleted);
+         _backgroundWorker1.WorkerReportsProgress = true;
+         _backgroundWorker1.DoWork += backgroundWorker1_DoWork;
+         _backgroundWorker1.ProgressChanged += backgroundWorker1_ProgressChanged;
+         _backgroundWorker1.RunWorkerCompleted += backgroundWorker1_RunWorkerCompleted;
       }
 
       // Runs when window opens
       private void Window_Loaded(object sender, RoutedEventArgs e)
       {
-         XML.readXML();
+         Xml.ReadXml();
 
-         if (checkLocations())
-            Videos.ItemsSource = TreeViewModel.setTree();
+         if (CheckLocations())
+            Videos.ItemsSource = TreeViewModel.SetTree();
          else
-            createLocationWindow();
+            CreateLocationWindow();
 
-         initWatchers();
+         InitWatchers();
       }
 
       #region Location Window
       // Returns true if file directories exist
-      private bool checkLocations()
+      private bool CheckLocations()
       {
-         if (!Directory.Exists(XML.location) || Directory.GetParent(XML.location) == null)
+         if (!Directory.Exists(Xml.Location) || Directory.GetParent(Xml.Location) == null)
          {
             return false;
          }
-         if (!Directory.Exists(XML.destTV) || Directory.GetParent(XML.destTV) == null)
+         if (!Directory.Exists(Xml.DestTv) || Directory.GetParent(Xml.DestTv) == null)
          {
             return false;
          }
-         if (!Directory.Exists(XML.destMovies) || Directory.GetParent(XML.destMovies) == null)
+         if (!Directory.Exists(Xml.DestMovies) || Directory.GetParent(Xml.DestMovies) == null)
          {
             return false;
          }
@@ -83,37 +81,36 @@ namespace FileOrganizer
       }
 
       // Creates the window to set the location for videos
-      private void createLocationWindow()
+      private void CreateLocationWindow()
       {
-         string prevLocation = XML.location;
-         string prevTV = XML.destTV;
-         string prevMov = XML.destMovies;
+         var prevLocation = Xml.Location;
+         var prevTv = Xml.DestTv;
+         var prevMov = Xml.DestMovies;
 
-         Locations l = new Locations();
-         l.Owner = this;
+         var l = new Locations {Owner = this};
          l.ShowDialog();
 
-         if (prevTV != XML.destTV)
+         if (prevTv != Xml.DestTv)
          {
-            TreeViewModel.tvshows = new List<string>();
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
-            resetTree();
+            TreeViewModel.Tvshows = new List<string>();
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
+            ResetTree();
          }
-         if (prevMov != XML.destMovies)
+         if (prevMov != Xml.DestMovies)
          {
-            TreeViewModel.movies = new List<string>();
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
-            resetTree();
+            TreeViewModel.Movies = new List<string>();
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
+            ResetTree();
          }
-         if (prevLocation != XML.location)
-            resetTree();
+         if (prevLocation != Xml.Location)
+            ResetTree();
       }
       #endregion
 
       #region Rename
-      private void files_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+      private void files_MouseRightButtonDown(object sender, RoutedEventArgs e)
       {
-         TreeViewItem treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
+         var treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
 
          if (treeViewItem != null)
          {
@@ -121,25 +118,24 @@ namespace FileOrganizer
             e.Handled = true;
          }
 
-         System.Windows.Controls.ContextMenu cm = new System.Windows.Controls.ContextMenu();
-         System.Windows.Controls.MenuItem rename = new System.Windows.Controls.MenuItem();
+         var cm = new ContextMenu();
+         var rename = new MenuItem {Header = "Rename"};
 
-         rename.Header = "Rename";
          rename.Click += rename_Click;
 
          cm.Items.Add(rename);
          cm.IsOpen = true;
-         treeViewItem.ContextMenu = cm;
+         if (treeViewItem != null) treeViewItem.ContextMenu = cm;
       }
 
       private void rename_Click(object sender, EventArgs e)
       {
          // TODO: Change input box
-         TreeViewModel t = (TreeViewModel)Videos.SelectedItem;
+         var t = (TreeViewModel)Videos.SelectedItem;
 
          var array = t.FullPath.Split('\\');
-         string dir = string.Join("\\", array.TakeWhile(x => x != array[array.Length - 1]));
-         string newName = Microsoft.VisualBasic.Interaction.InputBox("What would you like the new file name to be?", "Rename", t.Name);
+         var dir = string.Join("\\", array.TakeWhile(x => x != array[array.Length - 1]));
+         var newName = Interaction.InputBox("What would you like the new file Name to be?", "Rename", t.Name);
          t.Name = newName;
          File.Move(t.FullPath, dir + "\\" + newName + Path.GetExtension(t.FullPath));
       }
@@ -149,7 +145,7 @@ namespace FileOrganizer
          while (source != null && !(source is TreeViewItem))
             source = VisualTreeHelper.GetParent(source);
 
-         return source as TreeViewItem;
+         return (TreeViewItem) source;
       }
       #endregion
 
@@ -157,77 +153,66 @@ namespace FileOrganizer
       // Handler for location menu click
       private void Locations_Click(object sender, RoutedEventArgs e)
       {
-         createLocationWindow();
+         CreateLocationWindow();
       }
 
       #region Clean Directory
       private List<string> ReadFile(string filesToDelete)
       {
-         if (File.Exists(filesToDelete))
+         if (!File.Exists(filesToDelete)) return new List<string>();
+
+         var allLines = new List<string>();
+         using (var sr = File.OpenText(filesToDelete))
          {
-            List<string> AllLines = new List<string>();
-            using (StreamReader sr = File.OpenText(filesToDelete))
+            while (!sr.EndOfStream)
             {
-               while (!sr.EndOfStream)
-               {
-                  AllLines.Add(sr.ReadLine());
-               }
+               allLines.Add(sr.ReadLine());
             }
-            return AllLines;
          }
-         else
-         {
-            return new List<string>();
-         }
+         return allLines;
       }
       
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
       {
-         foreach (TreeViewModel tr in Videos.Items)
+         foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
          {
-            foreach (TreeViewModel child in tr.Children)
+            if (child.Children.Count < 1)
             {
-               if (child.Children.Count < 1)
+               if (child.Exists)
                {
-                  if (child.Exists == true)
-                  {
-                     DeleteFilesOrDirectories(child.FullPath);
-                  }
+                  DeleteFilesOrDirectories(child.FullPath);
                }
-               else
+            }
+            else
+            {
+               foreach (var grandchild in child.Children.Where(grandchild => grandchild.Exists))
                {
-                  foreach (TreeViewModel grandchild in child.Children)
-                  {
-                     if (grandchild.Exists == true)
-                     {
-                        DeleteFilesOrDirectories(grandchild.FullPath);
-                     }
-                  }
+                  DeleteFilesOrDirectories(grandchild.FullPath);
                }
             }
          }
 
-         this.Dispatcher.Invoke(() => {
-            var checkedNames = getChecked();
-            Videos.ItemsSource = TreeViewModel.setTree();
-            checkPreviouslyChecked(checkedNames);
+         Dispatcher.Invoke(() => {
+            var checkedNames = GetChecked();
+            Videos.ItemsSource = TreeViewModel.SetTree();
+            CheckPreviouslyChecked(checkedNames);
          });
       }
 
-      private void DeleteFilesOrDirectories(string filePath)
+      private static void DeleteFilesOrDirectories(string filePath)
       {
          try
          {
             var dir = Path.GetDirectoryName(filePath);
-            if (!Directory.EnumerateFiles(dir).Any(f => StringManipulations.isVideo(f)) && dir != XML.location)
+            if (!Directory.EnumerateFiles(dir).Any(StringManipulations.IsVideo) && dir != Xml.Location)
                FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
 
             FileSystem.DeleteFile(filePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
          }
          catch (IOException ex)
          {
-            LogFile lo = new LogFile(ex.ToString());
+            LogFile.Log(ex.ToString());
          }
       }
       #endregion
@@ -236,100 +221,93 @@ namespace FileOrganizer
       // Copies files that are selected to destinations
       private void Copy_Click(object sender, RoutedEventArgs e)
       {
-         originalSize = (GetDirectorySize(new DirectoryInfo(XML.destTV)) + GetDirectorySize(new DirectoryInfo(XML.destMovies)));
-         locs = new List<Locs>();
+         _locs = new List<Locs>();
          foreach (TreeViewModel tr in Videos.Items)
          {
-            getFilesSize(tr);
+            GetFilesSize(tr);
          }
-         backgroundWorker1.RunWorkerAsync(true);
+         _backgroundWorker1.RunWorkerAsync(true);
       }
 
       // Moves files that are selected to destinations
       private void Move_Click(object sender, RoutedEventArgs e)
       {
-         originalSize = (GetDirectorySize(new DirectoryInfo(XML.destTV)) + GetDirectorySize(new DirectoryInfo(XML.destMovies)));
-         locs = new List<Locs>();
+         _locs = new List<Locs>();
          foreach (TreeViewModel tr in Videos.Items)
          {
-            getFilesSize(tr);
+            GetFilesSize(tr);
          }
-         backgroundWorker1.RunWorkerAsync(false);
+         _backgroundWorker1.RunWorkerAsync(false);
       }
 
       // Populates the list of files to be moved
-      private void getFilesSize(TreeViewModel t)
+      private void GetFilesSize(TreeViewModel t)
       {
-         foreach (TreeViewModel child in t.Children)
+         foreach (var child in t.Children)
          {
-            string parent = child.Name;
-            if (StringManipulations.isMovie(child.Name))
+            var parent = child.Name;
+            if (StringManipulations.IsMovie(child.Name))
             {
-               if (child.IsChecked == true)
-               {
-                  string ext = Path.GetExtension(child.FullPath);
-                  Locs m;
-                  m.cur = child.FullPath;
-                  m.dest = XML.destMovies + child.Name + ext;
-                  m.name = child.Name;
-                  locs.Add(m);
+               if (child.IsChecked != true) continue;
 
-                  FileInfo fi = new FileInfo(child.FullPath);
-                  toMove += fi.Length;
-               }
+               var ext = Path.GetExtension(child.FullPath);
+               Locs m;
+               m.Cur = child.FullPath;
+               m.Dest = Xml.DestMovies + child.Name + ext;
+               m.Name = child.Name;
+               _locs.Add(m);
+
+               var fi = new FileInfo(child.FullPath);
+               _toMove += fi.Length;
             }
             else
             {
-               foreach (TreeViewModel ch in child.Children)
+               foreach (var ch in child.Children)
                {
-                  if (ch.IsChecked == true)
-                  {
-                     if (ch.FullPath != null)
-                     {
-                        string ext = Path.GetExtension(ch.FullPath);
-                        Locs s;
-                        s.cur = ch.FullPath;
-                        s.dest = XML.destTV + createFolders(parent) + "\\" + ch.Name + ext;
-                        s.name = ch.Name;
-                        locs.Add(s);
+                  if (ch.IsChecked != true || ch.FullPath == null) continue;
 
-                        FileInfo fi = new FileInfo(ch.FullPath);
-                        toMove += fi.Length;
-                     }
-                  }
+                  var ext = Path.GetExtension(ch.FullPath);
+                  Locs s;
+                  s.Cur = ch.FullPath;
+                  s.Dest = Xml.DestTv + CreateFolders(parent) + "\\" + ch.Name + ext;
+                  s.Name = ch.Name;
+                  _locs.Add(s);
+
+                  var fi = new FileInfo(ch.FullPath);
+                  _toMove += fi.Length;
                }
             }
          }
       }
 
       // Creates and returns folder for tv show
-      private string createFolders(string fold)
+      private string CreateFolders(string fold)
       {
-         // Gets folder name
+         // Gets folder Name
          // Gets season
-         string[] splitfold = fold.Split(' ');
-         string folder = "";
-         string seasonFold = "";
-         for (int i = 0; i < splitfold.Length; i++)
+         var splitfold = fold.Split(' ');
+         var folder = string.Empty;
+         var seasonFold = string.Empty;
+         for (var i = 0; i < splitfold.Length; i++)
          {
             if (i < splitfold.Length - 2)
             {
-               folder = folder == "" ? splitfold[i] : folder + " " + splitfold[i];
+               folder = folder == string.Empty ? splitfold[i] : folder + " " + splitfold[i];
             }
             else
             {
-               seasonFold = seasonFold == "" ? splitfold[i] : seasonFold + " " + splitfold[i];
+               seasonFold = seasonFold == string.Empty ? splitfold[i] : seasonFold + " " + splitfold[i];
             }
          }
 
          // Creates directories if they do not exists
-         if (!Directory.Exists(XML.destTV + folder))
+         if (!Directory.Exists(Xml.DestTv + folder))
          {
-            Directory.CreateDirectory(XML.destTV + folder); // Creates show folder
+            Directory.CreateDirectory(Xml.DestTv + folder); // Creates show folder
          }
-         if (!Directory.Exists(XML.destTV + folder + "\\" + seasonFold))
+         if (!Directory.Exists(Xml.DestTv + folder + "\\" + seasonFold))
          {
-            Directory.CreateDirectory(XML.destTV + folder + "\\" + seasonFold); // Creates season folder
+            Directory.CreateDirectory(Xml.DestTv + folder + "\\" + seasonFold); // Creates season folder
          }
 
          return string.Join("\\", folder, seasonFold);
@@ -342,74 +320,72 @@ namespace FileOrganizer
       {
          try
          {
-            foreach (Locs l in locs)
+            foreach (var l in _locs)
             {
-               if ((bool)e.Argument == true)
+               if ((bool)e.Argument)
                {
-                  this.Dispatcher.Invoke(() => {
-                     txtProgress.Text = l.name;
+                  Dispatcher.Invoke(() => {
+                     TxtProgress.Text = l.Name;
                   });
                   try
                   {
-                     CopyFile(l.cur, l.dest);
+                     CopyFile(l.Cur, l.Dest);
                   }
                   catch (Exception ex)
                   {
-                     LogFile lo = new LogFile(ex.ToString());
+                     LogFile.Log(ex.ToString());
                   }
                }
                else
                {
-                  this.Dispatcher.Invoke(() => {
-                     txtProgress.Text = l.name;
+                  Dispatcher.Invoke(() => {
+                     TxtProgress.Text = l.Name;
                   });
-                  CopyFile(l.cur, l.dest);
-                  DeleteFilesOrDirectories(l.cur);
+
+                  CopyFile(l.Cur, l.Dest);
+                  DeleteFilesOrDirectories(l.Cur);
                }
             }
          }
          catch (InvalidOperationException ex)
          {
             // Message to tell them the video is open in another program and to close it
-            LogFile lo = new LogFile(ex.ToString());
+            LogFile.Log(ex.ToString());
          }
          catch (Exception ex)
          {
-            LogFile lo = new LogFile(ex.ToString());
+            LogFile.Log(ex.ToString());
          }
       }
 
       private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
       {
-         progressBar1.Value = 0;  //report the progress
-         txtProgress.Text = "";
-         checkAll(false);
+         ProgressBar1.Value = 0;  //report the progress
+         TxtProgress.Text = string.Empty;
+         CheckAll(false);
       }
 
       // Copies the files 1 MB at a time
       private void CopyFile(string source, string destination)
       {
-         int bytesRead = 0;
-         int bytesPerChunk = 1024 * 1024;
+         const int bytesPerChunk = 1024 * 1024;
 
-         using (FileStream fs = new FileStream(source, FileMode.Open, FileAccess.Read))
+         using (var fs = new FileStream(source, FileMode.Open, FileAccess.Read))
          {
-            using (BinaryReader br = new BinaryReader(fs))
+            using (var br = new BinaryReader(fs))
             {
-               using (FileStream fsDest = new FileStream(destination, FileMode.Create))
+               using (var fsDest = new FileStream(destination, FileMode.Create))
                {
-                  BinaryWriter bw = new BinaryWriter(fsDest);
-                  byte[] buffer;
+                  var bw = new BinaryWriter(fsDest);
 
                   for (double i = 0; i < fs.Length; i += bytesPerChunk)
                   {
-                     buffer = br.ReadBytes(bytesPerChunk);
+                     var buffer = br.ReadBytes(bytesPerChunk);
                      bw.Write(buffer);
-                     bytesRead += bytesPerChunk;
-                     moved += bytesPerChunk;
-                     double ret = (moved / toMove) * 100;
-                     this.Dispatcher.Invoke(() => {
-                        backgroundWorker1.ReportProgress((int)ret);  //report the progress
+                     _moved += bytesPerChunk;
+                     var ret = (_moved / _toMove) * 100;
+                     Dispatcher.Invoke(() => {
+                        _backgroundWorker1.ReportProgress((int)ret);  //report the progress
                      });
                   }
                }
@@ -420,52 +396,46 @@ namespace FileOrganizer
       // Updates the progressBar value
       private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
       {
-         progressBar1.Value = e.ProgressPercentage;
+         ProgressBar1.Value = e.ProgressPercentage;
          // Fix for lagging progressBar
-         if (progressBar1.Value > 0)
+         if (ProgressBar1.Value > 0)
          {
-            progressBar1.Value = e.ProgressPercentage - 1;
-            progressBar1.Value = e.ProgressPercentage;
+            ProgressBar1.Value = e.ProgressPercentage - 1;
+            ProgressBar1.Value = e.ProgressPercentage;
          }
-         progressBar1.Value = e.ProgressPercentage;
+         ProgressBar1.Value = e.ProgressPercentage;
       }
 
       // Helper function to get the size of a directory
       private static long GetDirectorySize(DirectoryInfo d)
       {
-         long Size = 0;
          // Add file sizes.
-         FileInfo[] fis = d.GetFiles();
-         foreach (FileInfo fi in fis)
-         {
-            Size += fi.Length;
-         }
+         var fis = d.GetFiles();
+         var size = fis.Sum(fi => fi.Length);
+
          // Add subdirectory sizes.
-         DirectoryInfo[] dis = d.GetDirectories();
-         foreach (DirectoryInfo di in dis)
-         {
-            Size += GetDirectorySize(di);
-         }
-         return (Size);
+         var directories = d.GetDirectories();
+         size += directories.Sum(di => GetDirectorySize(di));
+         return (size);
       }
       #endregion
 
       #region Helper Functions
       // Reloads tree
-      private void resetTree()
+      private void ResetTree()
       {
-         this.Dispatcher.Invoke(() => {
-            Videos.ItemsSource = TreeViewModel.setTree();
+         Dispatcher.Invoke(() => {
+            Videos.ItemsSource = TreeViewModel.SetTree();
          });
       }
 
       // Retrieves checked items
-      private List<string> getChecked()
+      private List<string> GetChecked()
       {
-         List<string> check = new List<string>();
+         var check = new List<string>();
          foreach (TreeViewModel tr in Videos.Items)
          {
-            foreach (TreeViewModel child in tr.Children)
+            foreach (var child in tr.Children)
             {
                if (child.Children.Count < 1)
                {
@@ -476,13 +446,7 @@ namespace FileOrganizer
                }
                else
                {
-                  foreach (TreeViewModel grandchild in child.Children)
-                  {
-                     if (grandchild.IsChecked == true)
-                     {
-                        check.Add(grandchild.Name);
-                     }
-                  }
+                  check.AddRange(from grandchild in child.Children where grandchild.IsChecked == true select grandchild.Name);
                }
             }
          }
@@ -490,35 +454,30 @@ namespace FileOrganizer
       }
 
       // Checks previously checked items after updating the tree
-      private void checkPreviouslyChecked(List<string> checkedNames)
+      private void CheckPreviouslyChecked(List<string> checkedNames)
       {
-         foreach (TreeViewModel tr in Videos.Items)
+         foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
          {
-            foreach (TreeViewModel child in tr.Children)
+            if (child.Children.Count < 1)
             {
-               if (child.Children.Count < 1)
+               if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
                {
-                  if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
-                  {
-                     child.IsChecked = true;
-                  }
+                  child.IsChecked = true;
                }
-               else
+            }
+            else
+            {
+               foreach (var grandchild in child.Children.Where(grandchild => grandchild.IsChecked != true 
+                  && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null))
                {
-                  foreach (TreeViewModel grandchild in child.Children)
-                  {
-                     if (grandchild.IsChecked != true && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null)
-                     {
-                        grandchild.IsChecked = true;
-                     }
-                  }
+                  grandchild.IsChecked = true;
                }
             }
          }
       }
 
       // Checks all check boxes
-      private void checkAll(bool check)
+      private void CheckAll(bool check)
       {
          foreach (TreeViewModel tr in Videos.Items)
          {
@@ -529,41 +488,41 @@ namespace FileOrganizer
 
       #region FileSystemWatcher Methods
       // Initializes and turns on filewatcher for each directory
-      private void initWatchers()
+      private void InitWatchers()
       {
          // Initializes file watchers
-         wLoc = new FileSystemWatcher();
-         wTV = new FileSystemWatcher();
-         wMov = new FileSystemWatcher();
+         _wLoc = new FileSystemWatcher();
+         _wTv = new FileSystemWatcher();
+         _wMov = new FileSystemWatcher();
 
          // Sets path for each file watcher
-         wLoc.Path = XML.location;
-         wTV.Path = XML.destTV;
-         wMov.Path = XML.destMovies;
+         _wLoc.Path = Xml.Location;
+         _wTv.Path = Xml.DestTv;
+         _wMov.Path = Xml.DestMovies;
 
          // Sets each to watch subdirectories
-         wLoc.IncludeSubdirectories = true;
-         wTV.IncludeSubdirectories = true;
-         wMov.IncludeSubdirectories = true;
+         _wLoc.IncludeSubdirectories = true;
+         _wTv.IncludeSubdirectories = true;
+         _wMov.IncludeSubdirectories = true;
 
          // Adds event handlers for each directory storing videos
-         wLoc.Created += new FileSystemEventHandler(OnChanged);
-         wLoc.Changed += new FileSystemEventHandler(OnChanged);
-         wLoc.Deleted += new FileSystemEventHandler(OnChanged);
-         wLoc.Renamed += new RenamedEventHandler(OnRenamed);
+         _wLoc.Created += OnChanged;
+         _wLoc.Changed += OnChanged;
+         _wLoc.Deleted += OnChanged;
+         _wLoc.Renamed += OnRenamed;
 
-         wTV.Changed += new FileSystemEventHandler(OnChanged);
-         wTV.Deleted += new FileSystemEventHandler(OnChanged);
-         wTV.Renamed += new RenamedEventHandler(OnRenamed);
+         _wTv.Changed += OnChanged;
+         _wTv.Deleted += OnChanged;
+         _wTv.Renamed += OnRenamed;
 
-         wMov.Changed += new FileSystemEventHandler(OnChanged);
-         wMov.Deleted += new FileSystemEventHandler(OnChanged);
-         wMov.Renamed += new RenamedEventHandler(OnRenamed);
+         _wMov.Changed += OnChanged;
+         _wMov.Deleted += OnChanged;
+         _wMov.Renamed += OnRenamed;
 
          // Begins watching
-         wLoc.EnableRaisingEvents = true;
-         wTV.EnableRaisingEvents = true;
-         wMov.EnableRaisingEvents = true;
+         _wLoc.EnableRaisingEvents = true;
+         _wTv.EnableRaisingEvents = true;
+         _wMov.EnableRaisingEvents = true;
       }
 
       // When files are renamed in folders update tree
@@ -571,24 +530,23 @@ namespace FileOrganizer
       {
          try
          {
-            wLoc.EnableRaisingEvents = false;
-            wTV.EnableRaisingEvents = false;
-            wMov.EnableRaisingEvents = false;
-            if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase)
-               || e.FullPath.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-            {
-               TreeViewModel.tvshows = new List<string>();
-               TreeViewModel.movies = new List<string>();
-               TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
-               TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
-            }
+            _wLoc.EnableRaisingEvents = false;
+            _wTv.EnableRaisingEvents = false;
+            _wMov.EnableRaisingEvents = false;
+            if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
+                !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
+
+            TreeViewModel.Tvshows = new List<string>();
+            TreeViewModel.Movies = new List<string>();
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
          }
          finally
          {
-            wLoc.EnableRaisingEvents = true;
-            wTV.EnableRaisingEvents = true;
-            wMov.EnableRaisingEvents = true;
-            resetTree();
+            _wLoc.EnableRaisingEvents = true;
+            _wTv.EnableRaisingEvents = true;
+            _wMov.EnableRaisingEvents = true;
+            ResetTree();
          }
       }
 
@@ -597,24 +555,23 @@ namespace FileOrganizer
       {
          try
          {
-            wLoc.EnableRaisingEvents = false;
-            wTV.EnableRaisingEvents = false;
-            wMov.EnableRaisingEvents = false;
-            if (e.FullPath.Contains(XML.destTV, StringComparison.InvariantCultureIgnoreCase)
-               || e.FullPath.Contains(XML.destMovies, StringComparison.InvariantCultureIgnoreCase))
-            {
-               TreeViewModel.tvshows = new List<string>();
-               TreeViewModel.movies = new List<string>();
-               TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destTV));
-               TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(XML.destMovies));
-            }
+            _wLoc.EnableRaisingEvents = false;
+            _wTv.EnableRaisingEvents = false;
+            _wMov.EnableRaisingEvents = false;
+            if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
+                !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
+
+            TreeViewModel.Tvshows = new List<string>();
+            TreeViewModel.Movies = new List<string>();
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
+            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
          }
          finally
          {
-            wLoc.EnableRaisingEvents = true;
-            wTV.EnableRaisingEvents = true;
-            wMov.EnableRaisingEvents = true;
-            resetTree();
+            _wLoc.EnableRaisingEvents = true;
+            _wTv.EnableRaisingEvents = true;
+            _wMov.EnableRaisingEvents = true;
+            ResetTree();
          }
       }
       #endregion

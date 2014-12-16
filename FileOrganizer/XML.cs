@@ -4,55 +4,55 @@ using System.Xml;
 
 namespace FileOrganizer
 {
-   public class XML
+   public class Xml
    {
-      public static string location;
-      public static string destMovies;
-      public static string destTV;
+      public static string Location;
+      public static string DestMovies;
+      public static string DestTv;
 
-      private static XmlDocument doc = new XmlDocument();
+      private static XmlDocument _doc = new XmlDocument();
       // Lines created if there is no config file
-      private static string[] lines = {"<?xml version=\"1.0\" encoding=\"utf-8\" ?>", 
+      private static string[] _lines = {"<?xml version=\"1.0\" encoding=\"utf-8\" ?>", 
                                           "<locations>",
                                           @"  <location></location>",
                                           @"  <movies></movies>",
                                           @"  <tvshows></tvshows>",
                                           "</locations>"};
 
-      private static string configLoc = "config.xml";
+      private static string _configLoc = "config.xml";
 
       // Checks if the file exists
-      private static void checkFile()
+      private static void CheckFile()
       {
-         if (File.Exists(configLoc))
+         if (File.Exists(_configLoc))
          {
-            doc.Load(configLoc); // Loads the xml file
+            _doc.Load(_configLoc); // Loads the xml file
          }
          else
          {
-            File.WriteAllLines(configLoc, lines, Encoding.UTF8); // Creates blank config file
-            doc.Load(configLoc);
-            readXML();
+            File.WriteAllLines(_configLoc, _lines, Encoding.UTF8); // Creates blank config file
+            _doc.Load(_configLoc);
+            ReadXml();
          }
       }
 
       // Sets Videos file path variables to config file info
-      public static void readXML()
+      public static void ReadXml()
       {
-         checkFile();
-         location = doc.GetElementsByTagName("location")[0].InnerText; // grabs location of Videos
-         destMovies = doc.GetElementsByTagName("movies")[0].InnerText; // grabs where to move movies
-         destTV = doc.GetElementsByTagName("tvshows")[0].InnerText; // grabs where to move tv shows
+         CheckFile();
+         Location = _doc.GetElementsByTagName("location")[0].InnerText; // grabs location of Videos
+         DestMovies = _doc.GetElementsByTagName("movies")[0].InnerText; // grabs where to move movies
+         DestTv = _doc.GetElementsByTagName("tvshows")[0].InnerText; // grabs where to move tv shows
       }
 
       // Writes to the config file with locations
-      public static void writeXML()
+      public static void WriteXml()
       {
-         checkFile();
-         doc.GetElementsByTagName("location")[0].InnerText = location; // grabs location of Videos
-         doc.GetElementsByTagName("movies")[0].InnerText = destMovies; // grabs where to move movies
-         doc.GetElementsByTagName("tvshows")[0].InnerText = destTV; // grabs where to move tv shows
-         doc.Save(configLoc);
+         CheckFile();
+         _doc.GetElementsByTagName("location")[0].InnerText = Location; // grabs location of Videos
+         _doc.GetElementsByTagName("movies")[0].InnerText = DestMovies; // grabs where to move movies
+         _doc.GetElementsByTagName("tvshows")[0].InnerText = DestTv; // grabs where to move tv shows
+         _doc.Save(_configLoc);
       }
    }
 }

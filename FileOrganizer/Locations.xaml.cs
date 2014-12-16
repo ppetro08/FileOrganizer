@@ -19,19 +19,19 @@ namespace FileOrganizer
 
       private void Window_Loaded(object sender, RoutedEventArgs e)
       {
-         txtLocation.Text = XML.location;
-         txtMovies.Text = XML.destMovies;
-         txtShows.Text = XML.destTV;
+         TxtLocation.Text = Xml.Location;
+         TxtMovies.Text = Xml.DestMovies;
+         TxtShows.Text = Xml.DestTv;
 
-         locLost(sender, e);
-         moviesLost(sender, e);
-         showsLost(sender, e);
+         LocLost(sender, e);
+         MoviesLost(sender, e);
+         ShowsLost(sender, e);
       }
 
       // Validation for textboxes
       #region TextBox Validation
       // Check if all checkboxes are validated
-      private bool validation(string directory)
+      private bool Validation(string directory)
       {
          if (directory.Length != 0)
          {
@@ -83,71 +83,71 @@ namespace FileOrganizer
 
       // Lost focus handler for locations
 
-      private void locLost(object sender, RoutedEventArgs e)
+      private void LocLost(object sender, RoutedEventArgs e)
       {
-         if (validation(txtLocation.Text.Trim()))
+         if (Validation(TxtLocation.Text.Trim()))
          {
-            txtLocation.MouseEnter -= locTool; // Removes handler
-            txtLocation.ToolTip = null; // Removes tooltip
-            txtLocation.ClearValue(BackgroundProperty); // Resets background property to default
-            txtLocation.ClearValue(BorderBrushProperty); // Resets border property to default
+            TxtLocation.MouseEnter -= LocTool; // Removes handler
+            TxtLocation.ToolTip = null; // Removes tooltip
+            TxtLocation.ClearValue(BackgroundProperty); // Resets background property to default
+            TxtLocation.ClearValue(BorderBrushProperty); // Resets border property to default
          }
          else
          {
-            txtLocation.BorderBrush = Brushes.Red;
-            txtLocation.BorderThickness = new Thickness(1);
-            Color c = Colors.Red;
+            TxtLocation.BorderBrush = Brushes.Red;
+            TxtLocation.BorderThickness = new Thickness(1);
+            var c = Colors.Red;
             c.A = 20;
-            txtLocation.Background = new SolidColorBrush(c);
-            txtLocation.MouseEnter += locTool;
+            TxtLocation.Background = new SolidColorBrush(c);
+            TxtLocation.MouseEnter += LocTool;
          }
       }
       // Lost focus handler for movies
-      private void moviesLost(object sender, RoutedEventArgs e)
+      private void MoviesLost(object sender, RoutedEventArgs e)
       {
-         if (validation(txtMovies.Text.Trim()))
+         if (Validation(TxtMovies.Text.Trim()))
          {
-            txtMovies.MouseEnter -= movieTool; // Removes handler
-            txtMovies.ToolTip = null; // Removes tooltip
-            txtMovies.ClearValue(BackgroundProperty); // Resets background property to default
-            txtMovies.ClearValue(BorderBrushProperty); // Resets border property to default
+            TxtMovies.MouseEnter -= MovieTool; // Removes handler
+            TxtMovies.ToolTip = null; // Removes tooltip
+            TxtMovies.ClearValue(BackgroundProperty); // Resets background property to default
+            TxtMovies.ClearValue(BorderBrushProperty); // Resets border property to default
 
          }
          else
          {
-            txtMovies.BorderBrush = Brushes.Red;
-            txtMovies.BorderThickness = new Thickness(1);
-            Color c = Colors.Red;
+            TxtMovies.BorderBrush = Brushes.Red;
+            TxtMovies.BorderThickness = new Thickness(1);
+            var c = Colors.Red;
             c.A = 20;
-            txtMovies.Background = new SolidColorBrush(c);
-            txtMovies.MouseEnter += movieTool;
+            TxtMovies.Background = new SolidColorBrush(c);
+            TxtMovies.MouseEnter += MovieTool;
          }
       }
       // Lost focus handler for shows
-      private void showsLost(object sender, RoutedEventArgs e)
+      private void ShowsLost(object sender, RoutedEventArgs e)
       {
-         if (validation(txtShows.Text.Trim()))
+         if (Validation(TxtShows.Text.Trim()))
          {
-            txtShows.MouseEnter -= showTool; // Removes handler
-            txtShows.ToolTip = null; // Removes tooltip
-            txtShows.ClearValue(BackgroundProperty); // Resets background property to default
-            txtShows.ClearValue(BorderBrushProperty); // Resets border property to default
+            TxtShows.MouseEnter -= ShowTool; // Removes handler
+            TxtShows.ToolTip = null; // Removes tooltip
+            TxtShows.ClearValue(BackgroundProperty); // Resets background property to default
+            TxtShows.ClearValue(BorderBrushProperty); // Resets border property to default
          }
          else
          {
-            txtShows.BorderBrush = Brushes.Red;
-            txtShows.BorderThickness = new Thickness(1);
-            Color c = Colors.Red;
+            TxtShows.BorderBrush = Brushes.Red;
+            TxtShows.BorderThickness = new Thickness(1);
+            var c = Colors.Red;
             c.A = 20;
-            txtShows.Background = new SolidColorBrush(c);
-            txtShows.MouseEnter += showTool;
+            TxtShows.Background = new SolidColorBrush(c);
+            TxtShows.MouseEnter += ShowTool;
          }
       }
       // Tool tip handler for location
-      private void locTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void LocTool(object sender, System.Windows.Input.MouseEventArgs e)
       {
-         System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
-         if (txtLocation.Text.Trim() == "")
+         var tool = new System.Windows.Controls.ToolTip();
+         if (TxtLocation.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
          }
@@ -155,13 +155,13 @@ namespace FileOrganizer
          {
             tool.Content = "Please enter a valid location";
          }
-         txtLocation.ToolTip = tool;
+         TxtLocation.ToolTip = tool;
       }
       // Tool tip handler for movies
-      private void movieTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void MovieTool(object sender, System.Windows.Input.MouseEventArgs e)
       {
-         System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
-         if (txtMovies.Text.Trim() == "")
+         var tool = new System.Windows.Controls.ToolTip();
+         if (TxtMovies.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
          }
@@ -169,13 +169,13 @@ namespace FileOrganizer
          {
             tool.Content = "Please enter a valid location";
          }
-         txtMovies.ToolTip = tool;
+         TxtMovies.ToolTip = tool;
       }
       // Tool tip handler for shows
-      private void showTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void ShowTool(object sender, System.Windows.Input.MouseEventArgs e)
       {
-         System.Windows.Controls.ToolTip tool = new System.Windows.Controls.ToolTip();
-         if (txtShows.Text.Trim() == "")
+         var tool = new System.Windows.Controls.ToolTip();
+         if (TxtShows.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
          }
@@ -183,7 +183,7 @@ namespace FileOrganizer
          {
             tool.Content = "Please enter a valid location";
          }
-         txtShows.ToolTip = tool;
+         TxtShows.ToolTip = tool;
       }
       #endregion
 
@@ -191,32 +191,32 @@ namespace FileOrganizer
       // File browser for lcoation of torrents
       private void btnLocation_Click(object sender, RoutedEventArgs e)
       {
-         FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+         var folderBrowserDialog1 = new FolderBrowserDialog();
          if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
          {
-            txtLocation.Text = folderBrowserDialog1.SelectedPath;
+            TxtLocation.Text = folderBrowserDialog1.SelectedPath;
          }
-         locLost(sender, e);
+         LocLost(sender, e);
       }
       // File browser for movies
       private void btnMovies_Click(object sender, RoutedEventArgs e)
       {
-         FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+         var folderBrowserDialog1 = new FolderBrowserDialog();
          if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
          {
-            txtMovies.Text = folderBrowserDialog1.SelectedPath;
+            TxtMovies.Text = folderBrowserDialog1.SelectedPath;
          }
-         moviesLost(sender, e);
+         MoviesLost(sender, e);
       }
       // File browser for shows
       private void btnShows_Click(object sender, RoutedEventArgs e)
       {
-         FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+         var folderBrowserDialog1 = new FolderBrowserDialog();
          if (folderBrowserDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
          {
-            txtShows.Text = folderBrowserDialog1.SelectedPath;
+            TxtShows.Text = folderBrowserDialog1.SelectedPath;
          }
-         showsLost(sender, e);
+         ShowsLost(sender, e);
       }
       // Writes text boxes to xml config file
       private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -224,20 +224,20 @@ namespace FileOrganizer
          if (_validation)
          {
             // Changes public variables values to textbox value
-            if (!txtLocation.Text.Trim().EndsWith("\\"))
-               XML.location = txtLocation.Text.Trim() + "\\";
+            if (!TxtLocation.Text.Trim().EndsWith("\\"))
+               Xml.Location = TxtLocation.Text.Trim() + "\\";
             else
-               XML.location = txtLocation.Text.Trim();
-            if (!txtMovies.Text.Trim().EndsWith("\\"))
-               XML.destMovies = txtMovies.Text.Trim() + "\\";
+               Xml.Location = TxtLocation.Text.Trim();
+            if (!TxtMovies.Text.Trim().EndsWith("\\"))
+               Xml.DestMovies = TxtMovies.Text.Trim() + "\\";
             else
-               XML.destMovies = txtMovies.Text.Trim();
-            if (!txtShows.Text.Trim().EndsWith("\\"))
-               XML.destTV = txtShows.Text.Trim() + "\\";
+               Xml.DestMovies = TxtMovies.Text.Trim();
+            if (!TxtShows.Text.Trim().EndsWith("\\"))
+               Xml.DestTv = TxtShows.Text.Trim() + "\\";
             else
-               XML.destTV = txtShows.Text.Trim();
+               Xml.DestTv = TxtShows.Text.Trim();
 
-            XML.writeXML();
+            Xml.WriteXml();
             this.Close();
          }
          else
