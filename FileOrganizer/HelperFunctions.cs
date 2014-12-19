@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -7,9 +6,18 @@ using CustomExtensions;
 
 namespace FileOrganizer
 {
-   public class StringManipulations
+   public class HelperFunctions
    {
       public static string[] Extensions = { ".3gp", ".avi", ".flv", "m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv", ".wtv" };
+
+      //public string Rename(string fullpath)
+      //{
+      //   var array = fullpath.Split('\\');
+      //   var dir = string.Join("\\", array.TakeWhile(x => x != array[array.Length - 1]));
+      //   var newName = Interaction.InputBox("What would you like the new file Name to be?", "Rename", t.Name);
+      //   fullpath.Name = newName;
+      //   File.Move(fullpath, dir + "\\" + newName + Path.GetExtension(t.FullPath));
+      //}
 
       // Checks if movie or tv show
       public static bool IsMovie(string fullpath)

@@ -8,7 +8,6 @@ namespace FileOrganizer
    public class Show
    {
       // Member variables
-      public string Folder;
       public string File;
       public string Extension;
       public string Season;
@@ -27,7 +26,7 @@ namespace FileOrganizer
       {
          var part = string.Empty;
 
-         var splittv = StringManipulations.ReplaceStrings(File, new[] { '-', ' ' }).Split('.', ' ');
+         var splittv = HelperFunctions.ReplaceStrings(File, new[] { '-', ' ' }).Split('.', ' ');
          File = string.Empty;
 
          // Finds where the end of the tv name is based on common torrent names
@@ -44,51 +43,40 @@ namespace FileOrganizer
             }
             if (Regex.Match(splittv[i], @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase).Success)
             {
-               File = File + " " + GetSeasonName(splittv[i]).ToUpper();
-               GetSeasonNumber(splittv[i]);
+               var episode = GetEpisode(splittv[i]);
+               File = File + " " + episode.ToUpper();
+               Season = Season + " Season " + GetSeasonNumber(episode);
                break;
             }
 
             if (splittv[i].Contains("part", StringComparison.InvariantCultureIgnoreCase))
-               part = StringManipulations.GetPart(splittv, i);
+               part = HelperFunctions.GetPart(splittv, i);
             if (splittv[i].IndexOfAny("~`!@%^*()+>[]{}|".ToCharArray()) != -1)
+            {
                splittv[i] = string.Empty;
+            }
 
-            Season = Season + " " + StringManipulations.UppercaseFirst(splittv[i]);
-            Folder = Folder + " " + StringManipulations.UppercaseFirst(splittv[i]);
-            File = File + " " + StringManipulations.UppercaseFirst(splittv[i]);
+            if (splittv[i] == string.Empty)
+               continue;
+
+            Season = Season + " " + HelperFunctions.UppercaseFirst(splittv[i]);
+            File = File + " " + HelperFunctions.UppercaseFirst(splittv[i]);
          }
          File = File + part;
          Season = Season.Trim();
-         Folder = Folder.Trim();
          File = File.Trim();
       }
 
-      // Gets tv show season #
-      private void GetSeasonNumber(string splitseason)
+      private static int GetSeasonNumber(string splitseason)
       {
-         for (var i = 0; i < splitseason.Length; i++)
-         {
-            if (char.IsNumber(splitseason[i]))
-            {
-               if (Convert.ToInt32(splitseason[i].ToString()) == 0)
-               {
-                  Season = splitseason[i + 1].ToString();
-                  return;
-               }
-               if (splitseason.Length < 4)
-                  Season = splitseason[i].ToString();
-               else
-                  Season = splitseason[i] + splitseason[i + 1].ToString();
-               return;
-            }
-         }
+         return splitseason[1] != 0 ? Convert.ToInt32(splitseason[1] + splitseason[2].ToString()) : Convert.ToInt32(splitseason[2].ToString());
       }
 
       // Gets tv show season #
-      private static string GetSeasonName(string splitseason)
+      private static string GetEpisode(string splitseason)
       {
-         if (Regex.Match(splitseason, @"(s\d{1,2}e\d{1,2})|(s\d{2,4})").Success)
+         //TODO: Figure out how to catch indexoutofrangeexception and then rename
+         if (Regex.Match(splitseason, @"s\d{2}e\d{2}").Success)
             return splitseason;
 
          if (splitseason.Length > 6) return splitseason;

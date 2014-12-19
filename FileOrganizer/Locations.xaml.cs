@@ -1,16 +1,21 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Forms;
+using System.Windows.Media;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using ToolTip = System.Windows.Controls.ToolTip;
 
 namespace FileOrganizer
 {
    /// <summary>
    /// Interaction logic for Locations.xaml
    /// </summary>
-   public partial class Locations : Window
+   public partial class Locations
    {
-      private bool _validation = false;
+      private bool _validation;
 
       public Locations()
       {
@@ -44,44 +49,6 @@ namespace FileOrganizer
          _validation = false;
          return false;
       }
-
-      // Validates individual textboxes
-      //private void boxValidation(string box) {
-      //    if (box == "location") {
-      //        textBox = txtLocation;
-      //    } else if (box == "movies") {
-      //        textBox = txtMovies;
-      //    } else {
-      //        textBox = txtShows;
-      //    }
-
-      //    if (textBox.Text.Trim().Length != 0) {
-      //        if (Directory.Exists(textBox.Text.Trim())) {
-      //            textBox.MouseEnter -= txtTool; // Removes handler
-      //            textBox.ToolTip = null; // Removes tooltip
-      //            textBox.ClearValue(BackgroundProperty); // Resets background property to default
-      //            textBox.ClearValue(BorderBrushProperty); // Resets border property to default
-      //        } else {
-      //            textBox.BorderBrush = Brushes.Red;
-      //            textBox.BorderThickness = new Thickness(1);
-      //            Color c = Colors.Red;
-      //            c.A = 20;
-      //            textBox.Background = new SolidColorBrush(c);
-      //            textBox.MouseEnter += txtTool;
-      //            _validation = false;
-      //        }
-      //    } else {
-      //        textBox.BorderBrush = Brushes.Red;
-      //        textBox.BorderThickness = new Thickness(1);
-      //        Color c = Colors.Red;
-      //        c.A = 20;
-      //        textBox.Background = new SolidColorBrush(c);
-      //        textBox.MouseEnter += txtTool;
-      //        _validation = false;
-      //    }
-      //}
-
-      // Lost focus handler for locations
 
       private void LocLost(object sender, RoutedEventArgs e)
       {
@@ -144,9 +111,9 @@ namespace FileOrganizer
          }
       }
       // Tool tip handler for location
-      private void LocTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void LocTool(object sender, MouseEventArgs e)
       {
-         var tool = new System.Windows.Controls.ToolTip();
+         var tool = new ToolTip();
          if (TxtLocation.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
@@ -158,9 +125,9 @@ namespace FileOrganizer
          TxtLocation.ToolTip = tool;
       }
       // Tool tip handler for movies
-      private void MovieTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void MovieTool(object sender, MouseEventArgs e)
       {
-         var tool = new System.Windows.Controls.ToolTip();
+         var tool = new ToolTip();
          if (TxtMovies.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
@@ -172,9 +139,9 @@ namespace FileOrganizer
          TxtMovies.ToolTip = tool;
       }
       // Tool tip handler for shows
-      private void ShowTool(object sender, System.Windows.Input.MouseEventArgs e)
+      private void ShowTool(object sender, MouseEventArgs e)
       {
-         var tool = new System.Windows.Controls.ToolTip();
+         var tool = new ToolTip();
          if (TxtShows.Text.Trim() == string.Empty)
          {
             tool.Content = "A location is required";
@@ -238,32 +205,24 @@ namespace FileOrganizer
                Xml.DestTv = TxtShows.Text.Trim();
 
             Xml.WriteXml();
-            this.Close();
+            Close();
          }
          else
          {
-            System.Windows.MessageBox.Show("The locations entered are not valid.", "Invalid Locations", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("The locations entered are not valid.", "Invalid Locations", MessageBoxButton.OK, MessageBoxImage.Error);
          }
       }
       // Closes the window without saving
       private void btnCancel_Click(object sender, RoutedEventArgs e)
       {
-         this.Close();
+         Close();
       }
       #endregion
 
-      protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+      protected override void OnClosing(CancelEventArgs e)
       {
-         if (_validation)
-         {
-            base.OnClosing(e);
-            System.Windows.Application.Current.MainWindow.IsEnabled = true;
-         }
-         else
-         {
-            System.Windows.MessageBox.Show("The locations entered are not valid.", "Invalid Locations", MessageBoxButton.OK, MessageBoxImage.Error);
-            e.Cancel = true;
-         }
+         base.OnClosing(e);
+         Application.Current.MainWindow.IsEnabled = true;
       }
    }
 }

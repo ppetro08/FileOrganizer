@@ -78,7 +78,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LogFile.cs" />
-    <Compile Include="StringManipulations.cs" />
+    <Compile Include="HelperFunctions.cs" />
     <Compile Include="TreeViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

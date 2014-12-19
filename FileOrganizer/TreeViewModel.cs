@@ -130,7 +130,7 @@ namespace FileOrganizer
       #region Helper Functions
       private static void PopulateTree(List<string> videos)
       {
-         foreach (var video in videos.Where(StringManipulations.IsVideo))
+         foreach (var video in videos.Where(HelperFunctions.IsVideo))
          {
             AddItem(video);
          }
@@ -138,7 +138,7 @@ namespace FileOrganizer
 
       public static void RenameItem(string oldFullPath, string newFullPath)
       {
-         if (StringManipulations.IsMovie(oldFullPath))
+         if (HelperFunctions.IsMovie(oldFullPath))
          {
             var item = MovieTree.Children.First(c => c.FullPath == oldFullPath);
 
@@ -150,11 +150,11 @@ namespace FileOrganizer
          else
          {
             var s = new Show(oldFullPath);
-            var season = new TreeViewModel(s.Folder + " Season " + s.Season);
+            var season = new TreeViewModel(s.Season);
             var item = CheckTree(season).Children.First(c => c.FullPath == oldFullPath);
 
             var ns = new Show(newFullPath);
-            var newSeason = new TreeViewModel(ns.Folder + " Season " + ns.Season);
+            var newSeason = new TreeViewModel(ns.Season);
 
             if (season != newSeason)
             {
@@ -176,7 +176,7 @@ namespace FileOrganizer
 
       public static void DeleteItem(string fullPath)
       {
-         if (StringManipulations.IsMovie(fullPath))
+         if (HelperFunctions.IsMovie(fullPath))
          {
             var item = MovieTree.Children.First(c => c.FullPath == fullPath);
 
@@ -186,7 +186,7 @@ namespace FileOrganizer
          else
          {
             var s = new Show(fullPath);
-            var season = new TreeViewModel(s.Folder + " Season " + s.Season);
+            var season = new TreeViewModel(s.Season);
             var item = CheckTree(season).Children.First(c => c.FullPath == fullPath);
             CheckTree(season).Children.Remove(item);
 
@@ -199,7 +199,7 @@ namespace FileOrganizer
 
       public static void AddItem(string fullPath)
       {
-         if (StringManipulations.IsMovie(fullPath))
+         if (HelperFunctions.IsMovie(fullPath))
          {
             var m = new Movie(fullPath);
             MovieTree.Children.Add(new TreeViewModel(m.File, fullPath));
@@ -208,7 +208,7 @@ namespace FileOrganizer
          else
          {
             var s = new Show(fullPath);
-            var season = new TreeViewModel(s.Folder + " Season " + s.Season);
+            var season = new TreeViewModel(s.Season);
             CheckTree(season).Children.Add(new TreeViewModel(s.File, fullPath));
             TvTree.Children = SortTree(TvTree.Children);
          }

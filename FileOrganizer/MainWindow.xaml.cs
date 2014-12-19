@@ -13,14 +13,6 @@ using FileSystem = Microsoft.VisualBasic.FileIO.FileSystem;
 
 namespace FileOrganizer
 {
-
-   //TODO: Fix clean
-   //TODO: Recheck after setting tree
-
-
-   /// <summary>
-   /// Interaction logic for MainWindow.xaml
-   /// </summary>
    public partial class MainWindow
    {
       FileSystemWatcher _wLoc;
@@ -53,12 +45,15 @@ namespace FileOrganizer
       {
          Xml.ReadXml();
 
+
+
          if (CheckLocations())
             Videos.ItemsSource = TreeViewModel.SetTree();
          else
             CreateLocationWindow();
 
-         InitWatchers();
+         if (CheckLocations())
+            InitWatchers();
       }
 
       #region Location Window
@@ -108,6 +103,7 @@ namespace FileOrganizer
       #endregion
 
       #region Rename
+
       private void files_MouseRightButtonDown(object sender, RoutedEventArgs e)
       {
          var treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
@@ -140,7 +136,7 @@ namespace FileOrganizer
          File.Move(t.FullPath, dir + "\\" + newName + Path.GetExtension(t.FullPath));
       }
 
-      static TreeViewItem VisualUpwardSearch(DependencyObject source)
+      private static TreeViewItem VisualUpwardSearch(DependencyObject source)
       {
          while (source != null && !(source is TreeViewItem))
             source = VisualTreeHelper.GetParent(source);
@@ -157,24 +153,11 @@ namespace FileOrganizer
       }
 
       #region Clean Directory
-      //private List<string> ReadFile(string filesToDelete)
-      //{
-      //   if (!File.Exists(filesToDelete)) return new List<string>();
-
-      //   var allLines = new List<string>();
-      //   using (var sr = File.OpenText(filesToDelete))
-      //   {
-      //      while (!sr.EndOfStream)
-      //      {
-      //         allLines.Add(sr.ReadLine());
-      //      }
-      //   }
-      //   return allLines;
-      //}
       
       // Performs cleanup
       private void Clean_Click(object sender, RoutedEventArgs e)
       {
+         DeleteFilesOrDirectories(Xml.Location);
          foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
          {
             if (child.Children.Count < 1)
@@ -192,7 +175,6 @@ namespace FileOrganizer
                }
             }
          }
-
          ResetTree();
       }
 
@@ -201,10 +183,29 @@ namespace FileOrganizer
          try
          {
             var dir = Path.GetDirectoryName(filePath);
-            if (!Directory.EnumerateFiles(dir).Any(StringManipulations.IsVideo) && dir != Xml.Location)
-               FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+            var files = Directory.EnumerateFiles(dir).Where(HelperFunctions.IsVideo).ToList();
 
-            FileSystem.DeleteFile(filePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+            if (filePath != Xml.Location)
+            {
+               if (files.All(f => f == filePath) && dir != Xml.Location.Substring(0, Xml.Location.Length - 1))
+               {
+                  FileSystem.DeleteDirectory(dir, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+               }
+               else
+               {
+                  FileSystem.DeleteFile(filePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+               }
+            }
+            else
+            {
+               // Delete empty directories
+               var allDirectories = Directory.EnumerateDirectories(filePath).ToList();
+               var fileDirectories = files.Select(Path.GetDirectoryName).ToList();
+               foreach (var directory in allDirectories.Where(directory => !fileDirectories.Contains(directory)))
+               {
+                  FileSystem.DeleteDirectory(directory, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+               }
+            }
          }
          catch (IOException ex)
          {
@@ -242,7 +243,7 @@ namespace FileOrganizer
          foreach (var child in t.Children)
          {
             var parent = child.Name;
-            if (StringManipulations.IsMovie(child.Name))
+            if (HelperFunctions.IsMovie(child.Name))
             {
                if (child.IsChecked != true) continue;
 
@@ -403,17 +404,17 @@ namespace FileOrganizer
       }
 
       // Helper function to get the size of a directory
-      private static long GetDirectorySize(DirectoryInfo d)
-      {
-         // Add file sizes.
-         var fis = d.GetFiles();
-         var size = fis.Sum(fi => fi.Length);
+      //private static long GetDirectorySize(DirectoryInfo d)
+      //{
+      //   // Add file sizes.
+      //   var fis = d.GetFiles();
+      //   var size = fis.Sum(fi => fi.Length);
 
-         // Add subdirectory sizes.
-         var directories = d.GetDirectories();
-         size += directories.Sum(di => GetDirectorySize(di));
-         return (size);
-      }
+      //   // Add subdirectory sizes.
+      //   var directories = d.GetDirectories();
+      //   size += directories.Sum(di => GetDirectorySize(di));
+      //   return (size);
+      //}
       #endregion
 
       #region Helper Functions
@@ -421,58 +422,56 @@ namespace FileOrganizer
       private void ResetTree()
       {
          Dispatcher.Invoke(() => {
-            var checkedNames = GetChecked();
             Videos.ItemsSource = TreeViewModel.SetTree();
-            CheckPreviouslyChecked(checkedNames);
          });
       }
 
-      // Retrieves checked items
-      private List<string> GetChecked()
-      {
-         var check = new List<string>();
-         foreach (TreeViewModel tr in Videos.Items)
-         {
-            foreach (var child in tr.Children)
-            {
-               if (child.Children.Count < 1)
-               {
-                  if (child.IsChecked == true)
-                  {
-                     check.Add(child.Name);
-                  }
-               }
-               else
-               {
-                  check.AddRange(from grandchild in child.Children where grandchild.IsChecked == true select grandchild.Name);
-               }
-            }
-         }
-         return check;
-      }
+      //// Retrieves checked items
+      //private List<string> GetChecked()
+      //{
+      //   var check = new List<string>();
+      //   foreach (TreeViewModel tr in Videos.Items)
+      //   {
+      //      foreach (var child in tr.Children)
+      //      {
+      //         if (child.Children.Count < 1)
+      //         {
+      //            if (child.IsChecked == true && !child.Exists)
+      //            {
+      //               check.Add(child.Name);
+      //            }
+      //         }
+      //         else
+      //         {
+      //            check.AddRange(from grandchild in child.Children where grandchild.IsChecked == true && !child.Exists select grandchild.Name);
+      //         }
+      //      }
+      //   }
+      //   return check;
+      //}
 
-      // Checks previously checked items after updating the tree
-      private void CheckPreviouslyChecked(List<string> checkedNames)
-      {
-         foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
-         {
-            if (child.Children.Count < 1)
-            {
-               if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
-               {
-                  child.IsChecked = true;
-               }
-            }
-            else
-            {
-               foreach (var grandchild in child.Children.Where(grandchild => grandchild.IsChecked != true 
-                  && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null))
-               {
-                  grandchild.IsChecked = true;
-               }
-            }
-         }
-      }
+      //// Checks previously checked items after updating the tree
+      //private void CheckPreviouslyChecked(List<string> checkedNames)
+      //{
+      //   foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
+      //   {
+      //      if (child.Children.Count < 1)
+      //      {
+      //         if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
+      //         {
+      //            child.IsChecked = true;
+      //         }
+      //      }
+      //      else
+      //      {
+      //         foreach (var grandchild in child.Children.Where(grandchild => grandchild.IsChecked != true 
+      //            && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null))
+      //         {
+      //            grandchild.IsChecked = true;
+      //         }
+      //      }
+      //   }
+      //}
 
       // Checks all check boxes
       private void CheckAll(bool check)
@@ -531,6 +530,7 @@ namespace FileOrganizer
             _wLoc.EnableRaisingEvents = false;
             _wTv.EnableRaisingEvents = false;
             _wMov.EnableRaisingEvents = false;
+
             if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
                 !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
 
@@ -556,6 +556,7 @@ namespace FileOrganizer
             _wLoc.EnableRaisingEvents = false;
             _wTv.EnableRaisingEvents = false;
             _wMov.EnableRaisingEvents = false;
+
             if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
                 !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
 

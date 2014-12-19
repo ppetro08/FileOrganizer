@@ -23,10 +23,8 @@ namespace FileOrganizer
       {
          var part = string.Empty;
 
-         var splitmovie = StringManipulations.ReplaceStrings(File, new[] {'-', ' '}).Split('.', ' ');
+         var splitmovie = HelperFunctions.ReplaceStrings(File, new[] {'-', ' '}).Split('.', ' ');
          File = string.Empty;
-
-         //TODO: Check if part of series or has part and put them in a folder together
 
          // Finds where the end of the movie name is based on common torrent names
          for (var i = 0; i < splitmovie.Length; i++)
@@ -34,7 +32,7 @@ namespace FileOrganizer
             if (splitmovie[i].IndexOfAny("~`!@%^*()+>[]{}|".ToCharArray()) != -1)
                splitmovie[i] = string.Empty;
 
-            File = File + " " + StringManipulations.UppercaseFirst(splitmovie[i]);
+            File = File + " " + HelperFunctions.UppercaseFirst(splitmovie[i]);
          }
          File = File + part;
          File = File.Trim();
