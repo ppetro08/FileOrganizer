@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -25,8 +24,11 @@ namespace FileOrganizer
       private void SplitTv()
       {
          var part = string.Empty;
+         bool endSeason = false;
 
-         var splittv = HelperFunctions.ReplaceStrings(File, new[] { '-', ' ' }).Split('.', ' ');
+         File = File.Replace(DateTime.Now.Year.ToString(), "");
+         var splittv = Regex.Split(File, "[^a-zA-Z0-9]+");
+
          File = string.Empty;
 
          // Finds where the end of the tv name is based on common torrent names
@@ -41,7 +43,7 @@ namespace FileOrganizer
                   splittv[i + 1] = string.Empty;
                }
             }
-            if (Regex.Match(splittv[i], @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase).Success)
+            if (Regex.Match(splittv[i], @"(s\d{1,2}e\d{1,2})|(s\d{3,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase).Success)
             {
                var episode = GetEpisode(splittv[i]);
                File = File + " " + episode.ToUpper();
@@ -49,17 +51,20 @@ namespace FileOrganizer
                break;
             }
 
+            if (Regex.Match(splittv[i], @"s\d{2}", RegexOptions.IgnoreCase).Success)
+            {
+               Season = Season + " Season " + GetSeasonNumber(splittv[i]);
+               endSeason = true;
+            }
+
             if (splittv[i].Contains("part", StringComparison.InvariantCultureIgnoreCase))
                part = HelperFunctions.GetPart(splittv, i);
-            if (splittv[i].IndexOfAny("~`!@%^*()+>[]{}|".ToCharArray()) != -1)
-            {
-               splittv[i] = string.Empty;
-            }
 
             if (splittv[i] == string.Empty)
                continue;
+            if (!endSeason)
+               Season = Season + " " + HelperFunctions.UppercaseFirst(splittv[i]);
 
-            Season = Season + " " + HelperFunctions.UppercaseFirst(splittv[i]);
             File = File + " " + HelperFunctions.UppercaseFirst(splittv[i]);
          }
          File = File + part;

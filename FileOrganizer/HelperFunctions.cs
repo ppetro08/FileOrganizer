@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -19,7 +17,7 @@ namespace FileOrganizer
       //   File.Move(fullpath, dir + "\\" + newName + Path.GetExtension(t.FullPath));
       //}
 
-      // Checks if movie or tv show
+      // Checks if movie
       public static bool IsMovie(string fullpath)
       {
          var match = Regex.Match(Path.GetFileName(fullpath), @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
@@ -67,16 +65,6 @@ namespace FileOrganizer
          {
             return string.Empty;
          }
-      }
-
-      public static string ReplaceStrings(string str, char[] listOfCharsToReplace)
-      {
-         for (var i = 0; i == str.Length; i++)
-         {
-            if (listOfCharsToReplace.Contains(str[i]))
-               str = str.Replace(str[i], '.');
-         }
-         return str;
       }
    }
 }

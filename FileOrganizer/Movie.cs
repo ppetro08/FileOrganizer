@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace FileOrganizer
 {
@@ -23,15 +25,13 @@ namespace FileOrganizer
       {
          var part = string.Empty;
 
-         var splitmovie = HelperFunctions.ReplaceStrings(File, new[] {'-', ' '}).Split('.', ' ');
+         File = File.Replace(DateTime.Now.Year.ToString(), "");
+         var splitmovie = Regex.Split(File, "[^a-zA-Z0-9]+");
          File = string.Empty;
 
          // Finds where the end of the movie name is based on common torrent names
          for (var i = 0; i < splitmovie.Length; i++)
          {
-            if (splitmovie[i].IndexOfAny("~`!@%^*()+>[]{}|".ToCharArray()) != -1)
-               splitmovie[i] = string.Empty;
-
             File = File + " " + HelperFunctions.UppercaseFirst(splitmovie[i]);
          }
          File = File + part;

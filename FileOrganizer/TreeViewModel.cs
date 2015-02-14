@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CustomExtensions;
 
 namespace FileOrganizer
 {
@@ -96,22 +95,27 @@ namespace FileOrganizer
          }
 
          var nameSplit = name.Split(' ', '.');
-
-         var vidStart = nameSplit[0];
          var vidEnd = nameSplit.Length > 1 ? nameSplit[nameSplit.Length - 1] : string.Empty;
 
          if (Tvshows != null && _parent.Name.Contains("season", StringComparison.InvariantCultureIgnoreCase))
          {
+            var tvShowName = string.Empty;
             foreach (var str in nameSplit)
             {
                var match = Regex.Match(str, @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
-               if (!match.Success) continue;
-               return Tvshows.Any(s => s.Contains(vidStart, StringComparison.InvariantCultureIgnoreCase) && s.Contains(str, StringComparison.InvariantCultureIgnoreCase));
+               if (!match.Success)
+               {
+                  tvShowName += " " + str;
+                  continue;
+               }
+               tvShowName = tvShowName.Trim();
+               return Tvshows.Any(s => s.Contains(tvShowName, StringComparison.InvariantCultureIgnoreCase) && s.Contains(str, StringComparison.InvariantCultureIgnoreCase));
             }
          }
          else if (Movies != null && _parent.Name.Contains("movies", StringComparison.InvariantCultureIgnoreCase))
          {
-            // check if vidName is not longer than 1 word
+            var vidStart = nameSplit[0];
+            // check if vidName is 1 word
             if (nameSplit.Length == 1)
             {
                return Movies.Any(m => m.Equals(vidStart, StringComparison.InvariantCultureIgnoreCase));
@@ -265,11 +269,34 @@ namespace FileOrganizer
 
          return tree;
       }
+
+      // Checks previously checked items after updating the tree
+      private static void CheckPreviouslyChecked(List<TreeViewModel> tree, List<string> checkedNames)
+      {
+         foreach (var child in tree.SelectMany(tr => tr.Children))
+         {
+            if (child.Children.Count < 1)
+            {
+               if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
+               {
+                  child.IsChecked = true;
+               }
+            }
+            else
+            {
+               foreach (var grandchild in child.Children.Where(grandchild => grandchild.IsChecked != true
+                  && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null))
+               {
+                  grandchild.IsChecked = true;
+               }
+            }
+         }
+      }
       #endregion
 
       #region Create Tree
       // Returns tree with TV Shows and Movies
-      public static List<TreeViewModel> SetTree()
+      public static List<TreeViewModel> SetTree(List<string> checkedItems = null)
       {
          var treeView = new List<TreeViewModel>();
          MovieTree = new TreeViewModel("Movies");
@@ -299,6 +326,9 @@ namespace FileOrganizer
             treeView.Remove(MovieTree);
 
          treeView = SortTree(treeView);
+
+         if (checkedItems != null)
+            CheckPreviouslyChecked(treeView, checkedItems);
 
          return treeView;
       }

@@ -8,7 +8,7 @@
    <Window.Resources>
       <ResourceDictionary>
          <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem">
-            <Setter Property="IsExpanded" Value="True" />            
+            <Setter Property="IsExpanded" Value="True" />
             <Style.Triggers>
                <DataTrigger Binding="{Binding Exists}"  Value="True">
                   <Setter Property="Foreground" Value="Red" />
@@ -32,7 +32,8 @@
       </Menu>
       <TreeView x:Name="Videos" Margin="10, 24, 10, 47"
             ItemContainerStyle="{StaticResource TreeViewItemStyle}"
-            ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1">
+            ItemTemplate="{StaticResource CheckBoxItemTemplate}" BorderThickness="1"
+            MouseRightButtonDown="files_MouseRightButtonDown">
       </TreeView>
       <Button x:Name="BtnCopy" Content="Copy" Width="60" Height="20" FontSize="11" Click="Copy_Click" 
                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,2.5,80,22.5"/>

@@ -6,13 +6,13 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using CustomExtensions;
-using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.FileIO;
 using FileSystem = Microsoft.VisualBasic.FileIO.FileSystem;
 
 namespace FileOrganizer
 {
+   //TODO: Try to get a movie and tv show database to compare files against to get the real name instead of splitting
+
    public partial class MainWindow
    {
       FileSystemWatcher _wLoc;
@@ -44,8 +44,6 @@ namespace FileOrganizer
       private void Window_Loaded(object sender, RoutedEventArgs e)
       {
          Xml.ReadXml();
-
-
 
          if (CheckLocations())
             Videos.ItemsSource = TreeViewModel.SetTree();
@@ -103,7 +101,6 @@ namespace FileOrganizer
       #endregion
 
       #region Rename
-
       private void files_MouseRightButtonDown(object sender, RoutedEventArgs e)
       {
          var treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
@@ -126,14 +123,9 @@ namespace FileOrganizer
 
       private void rename_Click(object sender, EventArgs e)
       {
-         // TODO: Change input box
          var t = (TreeViewModel)Videos.SelectedItem;
-
-         var array = t.FullPath.Split('\\');
-         var dir = string.Join("\\", array.TakeWhile(x => x != array[array.Length - 1]));
-         var newName = Interaction.InputBox("What would you like the new file Name to be?", "Rename", t.Name);
-         t.Name = newName;
-         File.Move(t.FullPath, dir + "\\" + newName + Path.GetExtension(t.FullPath));
+         var rename = new Rename(t.Name, t.FullPath) { Owner = this };
+         rename.ShowDialog();
       }
 
       private static TreeViewItem VisualUpwardSearch(DependencyObject source)
@@ -183,6 +175,8 @@ namespace FileOrganizer
          try
          {
             var dir = Path.GetDirectoryName(filePath);
+            if (dir == null) return;
+
             var files = Directory.EnumerateFiles(dir).Where(HelperFunctions.IsVideo).ToList();
 
             if (filePath != Xml.Location)
@@ -302,12 +296,12 @@ namespace FileOrganizer
          {
             Directory.CreateDirectory(Xml.DestTv + folder); // Creates show folder
          }
-         if (!Directory.Exists(Xml.DestTv + folder + "\\" + seasonFold))
+         if (!Directory.Exists(Xml.DestTv + folder + @"\" + seasonFold))
          {
-            Directory.CreateDirectory(Xml.DestTv + folder + "\\" + seasonFold); // Creates season folder
+            Directory.CreateDirectory(Xml.DestTv + folder + @"\" + seasonFold); // Creates season folder
          }
 
-         return string.Join("\\", folder, seasonFold);
+         return string.Join(@"\", folder, seasonFold);
       }
       #endregion
       #endregion
@@ -422,56 +416,33 @@ namespace FileOrganizer
       private void ResetTree()
       {
          Dispatcher.Invoke(() => {
-            Videos.ItemsSource = TreeViewModel.SetTree();
+            Videos.ItemsSource = TreeViewModel.SetTree(GetChecked());
          });
       }
 
-      //// Retrieves checked items
-      //private List<string> GetChecked()
-      //{
-      //   var check = new List<string>();
-      //   foreach (TreeViewModel tr in Videos.Items)
-      //   {
-      //      foreach (var child in tr.Children)
-      //      {
-      //         if (child.Children.Count < 1)
-      //         {
-      //            if (child.IsChecked == true && !child.Exists)
-      //            {
-      //               check.Add(child.Name);
-      //            }
-      //         }
-      //         else
-      //         {
-      //            check.AddRange(from grandchild in child.Children where grandchild.IsChecked == true && !child.Exists select grandchild.Name);
-      //         }
-      //      }
-      //   }
-      //   return check;
-      //}
-
-      //// Checks previously checked items after updating the tree
-      //private void CheckPreviouslyChecked(List<string> checkedNames)
-      //{
-      //   foreach (var child in Videos.Items.Cast<TreeViewModel>().SelectMany(tr => tr.Children))
-      //   {
-      //      if (child.Children.Count < 1)
-      //      {
-      //         if (child.IsChecked != true && checkedNames.FirstOrDefault(c => c == child.Name) != null)
-      //         {
-      //            child.IsChecked = true;
-      //         }
-      //      }
-      //      else
-      //      {
-      //         foreach (var grandchild in child.Children.Where(grandchild => grandchild.IsChecked != true 
-      //            && checkedNames.FirstOrDefault(c => c == grandchild.Name) != null))
-      //         {
-      //            grandchild.IsChecked = true;
-      //         }
-      //      }
-      //   }
-      //}
+      // Retrieves checked items
+      public List<string> GetChecked()
+      {
+         var check = new List<string>();
+         foreach (TreeViewModel tr in Videos.Items)
+         {
+            foreach (var child in tr.Children)
+            {
+               if (child.Children.Count < 1)
+               {
+                  if (child.IsChecked == true && !child.Exists)
+                  {
+                     check.Add(child.Name);
+                  }
+               }
+               else
+               {
+                  check.AddRange(from grandchild in child.Children where grandchild.IsChecked == true && !child.Exists select grandchild.Name);
+               }
+            }
+         }
+         return check;
+      }
 
       // Checks all check boxes
       private void CheckAll(bool check)
@@ -534,10 +505,7 @@ namespace FileOrganizer
             if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
                 !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
 
-            TreeViewModel.Tvshows = new List<string>();
-            TreeViewModel.Movies = new List<string>();
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
+            RepopulateLists();
          }
          finally
          {
@@ -560,10 +528,7 @@ namespace FileOrganizer
             if (!e.FullPath.Contains(Xml.DestTv, StringComparison.InvariantCultureIgnoreCase) &&
                 !e.FullPath.Contains(Xml.DestMovies, StringComparison.InvariantCultureIgnoreCase)) return;
 
-            TreeViewModel.Tvshows = new List<string>();
-            TreeViewModel.Movies = new List<string>();
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
-            TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
+            RepopulateLists();
          }
          finally
          {
@@ -572,6 +537,14 @@ namespace FileOrganizer
             _wMov.EnableRaisingEvents = true;
             ResetTree();
          }
+      }
+
+      private void RepopulateLists()
+      {
+         TreeViewModel.Tvshows = new List<string>();
+         TreeViewModel.Movies = new List<string>();
+         TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestTv));
+         TreeViewModel.PopulateDestinationLists(TreeViewModel.DirSearch(Xml.DestMovies));
       }
       #endregion
    }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CustomExtensions
+namespace FileOrganizer
 {
    public static class StringExtensions
    {
