@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -11,6 +12,7 @@ using FileSystem = Microsoft.VisualBasic.FileIO.FileSystem;
 
 namespace FileOrganizer
 {
+   //TODO: See what is going on with the three movies in the test folder with the file getting unchecked.... the file not getting removed from the list when it was moved
    //TODO: Try to get a movie and tv show database to compare files against to get the real name instead of splitting
 
    public partial class MainWindow
@@ -100,7 +102,7 @@ namespace FileOrganizer
       }
       #endregion
 
-      #region Rename
+      #region Right Click Menus
       private void files_MouseRightButtonDown(object sender, RoutedEventArgs e)
       {
          var treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
@@ -113,10 +115,16 @@ namespace FileOrganizer
 
          var cm = new ContextMenu();
          var rename = new MenuItem {Header = "Rename"};
+         var delete = new MenuItem { Header = "Delete" };
+         var openContainingFolder = new MenuItem { Header = "Open Containing Folder" };
 
          rename.Click += rename_Click;
+         delete.Click += delete_Click;
+         openContainingFolder.Click += openContainingFolder_Click;
 
          cm.Items.Add(rename);
+         cm.Items.Add(delete);
+         cm.Items.Add(openContainingFolder);
          cm.IsOpen = true;
          if (treeViewItem != null) treeViewItem.ContextMenu = cm;
       }
@@ -126,6 +134,21 @@ namespace FileOrganizer
          var t = (TreeViewModel)Videos.SelectedItem;
          var rename = new Rename(t.Name, t.FullPath) { Owner = this };
          rename.ShowDialog();
+      }
+
+      private void delete_Click(object sender, EventArgs e)
+      {
+         var t = (TreeViewModel)Videos.SelectedItem;
+         FileSystem.DeleteFile(t.FullPath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+      }
+
+      private void openContainingFolder_Click(object sender, EventArgs e)
+      {
+         var t = (TreeViewModel)Videos.SelectedItem;
+         var directory = Path.GetDirectoryName(t.FullPath);
+
+         if (directory != null)
+            Process.Start(directory);
       }
 
       private static TreeViewItem VisualUpwardSearch(DependencyObject source)

@@ -78,28 +78,39 @@ namespace FileOrganizer
       }
 
       // Gets tv show season #
-      private static string GetEpisode(string splitseason)
+      private static string GetEpisode(string splitSeason)
       {
-         //TODO: Figure out how to catch indexoutofrangeexception and then rename
-         if (Regex.Match(splitseason, @"s\d{2}e\d{2}").Success)
-            return splitseason;
+         if (Regex.Match(splitSeason, @"s\d{2}e\d{2}").Success)
+            return splitSeason;
 
-         if (splitseason.Length > 6) return splitseason;
-
-         if (char.ToLower(splitseason[0]) != 's')
+         if (Regex.Match(splitSeason, @"(\d{1,2}[A-Za-z]\d{1,2})").Success)
          {
-            if (splitseason[0] != 0 && (char.ToLower(splitseason[1]) == 'e' || splitseason.Length < 4))
-               splitseason = "0" + splitseason;
+            var season = String.Empty;
+            var episode = String.Empty;
 
-            splitseason = "s" + splitseason;
+            var seasonMatch = Regex.Match(splitSeason, @"\d{1,2}");
+
+            if (seasonMatch.Success)
+            {
+               season = seasonMatch.Value;
+               episode = seasonMatch.NextMatch().Value;
+            }
+
+            if (season.Length == 1)
+               season = "s0" + season;
+            else
+               season = "s" + season;
+
+            if (episode.Length == 1)
+               episode = "e0" + episode;
+            else
+               episode = "e" + episode;
+
+            splitSeason = season + episode;
+
+            return splitSeason;
          }
-         if (splitseason[1] != '0' && splitseason[2] == 'e')
-            splitseason = splitseason[0] + "0" + splitseason.Substring(1);
-         if (char.ToLower(splitseason[3]) != 'e')
-            splitseason = splitseason.Replace(splitseason[3].ToString(), "e");
-         if (splitseason[4] != 0 && splitseason.Length < 6)
-            splitseason = splitseason.Substring(0, 4) + "0" + splitseason[splitseason.Length - 1];
-         return splitseason;
+         return splitSeason;
       }
    }
 }

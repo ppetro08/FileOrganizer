@@ -30,9 +30,12 @@ namespace FileOrganizer
          File = string.Empty;
 
          // Finds where the end of the movie name is based on common torrent names
-         for (var i = 0; i < splitmovie.Length; i++)
+         foreach (string t in splitmovie)
          {
-            File = File + " " + HelperFunctions.UppercaseFirst(splitmovie[i]);
+            if (t == DateTime.Now.Year.ToString() || t == DateTime.Now.AddYears(-1).Year.ToString())
+               break;
+
+            File = File + " " + HelperFunctions.UppercaseFirst(t);
          }
          File = File + part;
          File = File.Trim();

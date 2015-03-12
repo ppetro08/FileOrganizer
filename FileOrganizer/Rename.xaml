@@ -3,13 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Rename File" Height="140" Width="350"
         Loaded="Window_Loaded" WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize" KeyDown="Window_KeyDown">
    <Grid>
-      <Label Content="Enter the new name for the file" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0" Padding="0,5,5,5" Height="26" />
-      <TextBox Name="TxtFileName" VerticalAlignment="Top" Height="20" Margin="10,35,10,0"/>
+      <Label Name="LblRename" Content="Enter the new name for the file" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0" Padding="0,5,5,5" Height="26" />
+      <TextBox Name="TxtFileName" VerticalAlignment="Top" KeyDown="txtFileName_KeyDown" Height="20" Margin="10,35,10,0"/>
 
       <Button Name="BtnCancel" Content="Cancel" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,10" Width="60" Click="BtnCancel_Click"/>
-      <Button Name="BtnOK" Content="OK" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,80,10" Width="60" Click="BtnOK_Click"/>
+      <Button Name="BtnOk" Content="OK" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,80,10" Width="60" Click="BtnOK_Click"/>
 
    </Grid>
 </Window>
