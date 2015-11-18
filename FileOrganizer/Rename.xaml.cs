@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -12,22 +11,25 @@ namespace FileOrganizer
    {
       private readonly string _originalFileName;
       private readonly string _originalFilePath;
+       private readonly string _extension;
 
-      public Rename(String originalFileName, String originalFilePath)
+      public Rename(string originalFileName, string originalFilePath, string extension)
       {
          InitializeComponent();
          _originalFileName = originalFileName;
          _originalFilePath = originalFilePath;
+          _extension = extension;
       }
 
-      public Rename(String label, String originalFileName, String originalFilePath)
+      public Rename(string label, string originalFileName, string originalFilePath, string extension)
       {
          InitializeComponent();
          LblRename.Content = label;
          LblRename.Foreground = Brushes.Red;
          _originalFileName = originalFileName;
          _originalFilePath = originalFilePath;
-      }
+            _extension = extension;
+        }
 
       private void Window_Loaded(object sender, RoutedEventArgs e)
       {
@@ -60,10 +62,10 @@ namespace FileOrganizer
 
          var splitFilePath = _originalFilePath.Split('\\');
          var dir = string.Join("\\", splitFilePath.TakeWhile(x => x != splitFilePath[splitFilePath.Length - 1]));
-         File.Move(_originalFilePath, dir + "\\" + newFileName + Path.GetExtension(_originalFilePath));
+         File.Move(_originalFilePath, dir + "\\" + newFileName + _extension);
       }
 
-      private void txtFileName_KeyDown(Object sender, KeyEventArgs e)
+      private void txtFileName_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.Key == Key.Enter)
          {
@@ -71,7 +73,7 @@ namespace FileOrganizer
          }
       }
 
-      private void Window_KeyDown(Object sender, KeyEventArgs e)
+      private void Window_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.Key == Key.Escape)
          {

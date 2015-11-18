@@ -20,7 +20,7 @@ namespace FileOrganizer
       // Checks if movie
       public static bool IsMovie(string fullpath)
       {
-         var match = Regex.Match(Path.GetFileName(fullpath), @"(s\d{1,2}e\d{1,2})|(s\d{2,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase);
+         var match = Regex.Match(Path.GetFileName(fullpath), @"(\d{1,2}[a-z]\d{1,2})|(e\d{1,2})|(s\d{1,2}e\d{1,2})", RegexOptions.IgnoreCase);
          return !match.Success && !fullpath.Contains("season", StringComparison.InvariantCultureIgnoreCase);
       }
 

@@ -116,7 +116,7 @@ namespace FileOrganizer
          var cm = new ContextMenu();
          var rename = new MenuItem {Header = "Rename"};
          var delete = new MenuItem { Header = "Delete" };
-         var openContainingFolder = new MenuItem { Header = "Open Containing Folder" };
+         var openContainingFolder = new MenuItem { Header = "Open Containing folder" };
 
          rename.Click += rename_Click;
          delete.Click += delete_Click;
@@ -132,7 +132,7 @@ namespace FileOrganizer
       private void rename_Click(object sender, EventArgs e)
       {
          var t = (TreeViewModel)Videos.SelectedItem;
-         var rename = new Rename(t.Name, t.FullPath) { Owner = this };
+         var rename = new Rename(t.Name, t.FullPath, t.Extension) { Owner = this };
          rename.ShowDialog();
       }
 
@@ -267,7 +267,7 @@ namespace FileOrganizer
                var ext = Path.GetExtension(child.FullPath);
                Locs m;
                m.Cur = child.FullPath;
-               m.Dest = Xml.DestMovies + child.Name + ext;
+               m.Dest = Xml.DestMovies + child.Name + child.Extension;
                m.Name = child.Name;
                _locs.Add(m);
 
@@ -279,11 +279,10 @@ namespace FileOrganizer
                foreach (var ch in child.Children)
                {
                   if (ch.IsChecked != true || ch.FullPath == null) continue;
-
-                  var ext = Path.GetExtension(ch.FullPath);
+                  
                   Locs s;
                   s.Cur = ch.FullPath;
-                  s.Dest = Xml.DestTv + CreateFolders(parent) + "\\" + ch.Name + ext;
+                  s.Dest = Xml.DestTv + CreateFolders(parent) + "\\" + ch.Name + ch.Extension;
                   s.Name = ch.Name;
                   _locs.Add(s);
 

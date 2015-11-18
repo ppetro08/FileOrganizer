@@ -1,116 +1,145 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace FileOrganizer
 {
-   public class Show
-   {
-      // Member variables
-      public string File;
-      public string Extension;
-      public string Season;
-      public string Fullpath;
+    public class Show
+    {
+        // Member variables
+        public string File;
+        public string Extension;
+        public string Season;
+        public string Fullpath;
 
-      public Show(string f)
-      {
-         Fullpath = f;
-         File = Path.GetFileNameWithoutExtension(Fullpath);
-         Extension = Path.GetExtension(Fullpath);
-         SplitTv();
-      }
+        public Show(string f)
+        {
+            Fullpath = f;
+            File = Path.GetFileNameWithoutExtension(Fullpath);
+            File = File?.Replace(DateTime.Now.Year.ToString(), "");
+            Extension = Path.GetExtension(Fullpath);
+            SplitTv();
+        }
 
-      // Splits the tv and joins tv name
-      private void SplitTv()
-      {
-         var part = string.Empty;
-         bool endSeason = false;
+        // Splits the tv and joins tv name
+        private void SplitTv()
+        {
+            var file = BuildName(File);
 
-         File = File.Replace(DateTime.Now.Year.ToString(), "");
-         var splittv = Regex.Split(File, "[^a-zA-Z0-9]+");
-
-         File = string.Empty;
-
-         // Finds where the end of the tv name is based on common torrent names
-         for (var i = 0; i < splittv.Length; i++)
-         {
-            if (i != splittv.Length - 1)
+            foreach (var s in file.Split(' '))
             {
-               if (Regex.Match(splittv[i], @"s\d{1,2}", RegexOptions.IgnoreCase).Success
-                   && Regex.Match(splittv[i + 1], @"e\d{1,2}", RegexOptions.IgnoreCase).Success)
-               {
-                  splittv[i] = splittv[i] + splittv[i + 1];
-                  splittv[i + 1] = string.Empty;
-               }
-            }
-            if (Regex.Match(splittv[i], @"(s\d{1,2}e\d{1,2})|(s\d{3,4})|(\d{1,2}[a-zA-Z]\d{1,2})", RegexOptions.IgnoreCase).Success)
-            {
-               var episode = GetEpisode(splittv[i]);
-               File = File + " " + episode.ToUpper();
-               Season = Season + " Season " + GetSeasonNumber(episode);
-               break;
+                if (Regex.Match(s, @"s\d{2}e\d{2}", RegexOptions.IgnoreCase).Success)
+                    break;
+                Season += " " + s;
             }
 
-            if (Regex.Match(splittv[i], @"s\d{2}", RegexOptions.IgnoreCase).Success)
+            var seasonNumber = Regex.Match(file.Split(' ').Last(), @"\d{2}", RegexOptions.IgnoreCase).Value;
+            seasonNumber = (int)char.GetNumericValue(seasonNumber[0]) == 0 ? seasonNumber[1].ToString() : seasonNumber;
+
+            File = file.Trim();
+            Season = Season.Trim() + " Season " + seasonNumber;
+        }
+
+        public string BuildName(string file)
+        {
+            var part = string.Empty;
+            var name = string.Empty;
+            var splittv = Regex.Split(file, "[^a-zA-Z0-9]+");
+            var hasPart = file.Contains("part", StringComparison.InvariantCultureIgnoreCase);
+            var endSeason = false;
+
+            for (var i = 0; i < splittv.Length; i++)
             {
-               Season = Season + " Season " + GetSeasonNumber(splittv[i]);
-               endSeason = true;
+                var newSplit = string.Empty;
+                if (Regex.Match(splittv[i], @"(\d{1,2}[a-z]\d{1,2})|(e\d{1,2})|(s\d{1,2}e\d{1,2})", RegexOptions.IgnoreCase).Success)
+                {
+                    newSplit = GetEpisode(splittv[i]);
+                    if (!hasPart)
+                        endSeason = true;
+                }
+
+                if (splittv[i].Contains("part", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    part = HelperFunctions.GetPart(splittv, i);
+                    endSeason = true;
+                }
+
+                newSplit = newSplit != string.Empty ? newSplit.ToUpperInvariant() : splittv[i];
+                name += " " + newSplit;
+                if (endSeason) break;
             }
 
-            if (splittv[i].Contains("part", StringComparison.InvariantCultureIgnoreCase))
-               part = HelperFunctions.GetPart(splittv, i);
+            return name.Trim() + part;
+        }
 
-            if (splittv[i] == string.Empty)
-               continue;
-            if (!endSeason)
-               Season = Season + " " + HelperFunctions.UppercaseFirst(splittv[i]);
+        private string GetEpisode(string splitSeason)
+        {
+            if (Regex.Match(splitSeason, @"s\d{2}e\d{2}", RegexOptions.IgnoreCase).Success)
+                return splitSeason;
 
-            File = File + " " + HelperFunctions.UppercaseFirst(splittv[i]);
-         }
-         File = File + part;
-         Season = Season.Trim();
-         File = File.Trim();
-      }
+            if (Regex.Match(splitSeason, @"(e\d{1,2})", RegexOptions.IgnoreCase).Success)
+            {
+                var season = string.Empty;
+                if (Fullpath.Contains("season", StringComparison.InvariantCultureIgnoreCase))
+                    season = Regex.Split(Fullpath, "season", RegexOptions.IgnoreCase)[1];
 
-      private static int GetSeasonNumber(string splitseason)
-      {
-         return splitseason[1] != 0 ? Convert.ToInt32(splitseason[1] + splitseason[2].ToString()) : Convert.ToInt32(splitseason[2].ToString());
-      }
+                if (Regex.Match(Fullpath, @"s\d{2}e\d{2}", RegexOptions.IgnoreCase).Success)
+                    season = Regex.Match(Fullpath, @"s\d{2}e\d{2}", RegexOptions.IgnoreCase).Value;
 
-      // Gets tv show season #
-      private static string GetEpisode(string splitSeason)
-      {
-         if (Regex.Match(splitSeason, @"s\d{2}e\d{2}").Success)
+                season = Regex.Match(season, @"\d{1,2}").Value;
+                splitSeason = season + Regex.Match(splitSeason, @"(e\d{1,2})", RegexOptions.IgnoreCase).Value;
+
+            }
+
+            if (Regex.Match(splitSeason, @"(\d{1,2}[a-z]\d{1,2})", RegexOptions.IgnoreCase).Success)
+            {
+                var season = string.Empty;
+                var episode = string.Empty;
+
+                var seasonMatch = Regex.Match(splitSeason, @"\d{1,2}");
+
+                if (seasonMatch.Success)
+                {
+                    season = seasonMatch.Value;
+                    episode = seasonMatch.NextMatch().Value;
+                }
+
+                if (season.Length == 1)
+                    season = "s0" + season;
+                else
+                    season = "s" + season;
+
+                if (episode.Length == 1)
+                    episode = "e0" + episode;
+                else
+                    episode = "e" + episode;
+
+                splitSeason = season + episode;
+
+                return splitSeason;
+            }
+
             return splitSeason;
+        }
 
-         if (Regex.Match(splitSeason, @"(\d{1,2}[A-Za-z]\d{1,2})").Success)
-         {
-            var season = String.Empty;
-            var episode = String.Empty;
+        //public string CheckFile(string file)
+        //{
+        //    var directory = Path.GetDirectoryName(Fullpath);
+        //    if (directory == null) return file;
 
-            var seasonMatch = Regex.Match(splitSeason, @"\d{1,2}");
+        //    foreach (var d in directory.Split('\\'))
+        //    {
+        //        if (d.Contains("season", StringComparison.InvariantCultureIgnoreCase)
+        //            || Regex.Match(d, @"s\d{1,2}e\d{1,2}", RegexOptions.IgnoreCase).Success)
+        //        {
+        //            return BuildName(d);
+        //        }
+        //    }
 
-            if (seasonMatch.Success)
-            {
-               season = seasonMatch.Value;
-               episode = seasonMatch.NextMatch().Value;
-            }
+        //    return file;
+        //}
 
-            if (season.Length == 1)
-               season = "s0" + season;
-            else
-               season = "s" + season;
-
-            if (episode.Length == 1)
-               episode = "e0" + episode;
-            else
-               episode = "e" + episode;
-
-            splitSeason = season + episode;
-
-            return splitSeason;
-         }
-         return splitSeason;
-      }
-   }
+        // Builds SxxExx for episode
+    }
 }
